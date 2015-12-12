@@ -1,0 +1,61 @@
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+div.page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+div.page.home div.content-table {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+div.page.home div.content-table > div.content-cell {
+  display: table-cell;
+  vertical-align: middle;
+}
+div.page.home div.content-table > div.content-cell div.well {
+  margin: 0 auto;
+  width: 80%;
+}
+div.page.home div.content-table > div.content-cell div.well div.form-group {
+  margin: 0;
+}
+div.page.webview {
+  padding-top: 50px;
+}
+div.page.webview > div.addressbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 7px;
+  width: 100%;
+}
+div.page.webview > div.webview-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+div.page.webview > div.webview-content webview {
+  width: 100%;
+  height: 100%;
+}
+div.page.webview > div.webview-content > div.indicator {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  background-image: url(294.GIF);
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+}
+div.page.webview > div.webview-content.loading > div.indicator {
+  display: block;
+}
