@@ -85,7 +85,7 @@ function webview (url) {
 
   var $frame = $("<webview src=\""+ url +"\"></webview>");
 
-  $frame.attr("preload", "./highlight.js");
+  $frame.attr("preload", "./js/highlight.js");
 
   $frame.on("did-stop-loading", function () {
 
