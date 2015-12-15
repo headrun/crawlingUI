@@ -1,6 +1,7 @@
 var $ = require("jquery");
 
 $(function () {
+  "use strict";
 
   var router = require("./js/router"),
       ctrlrs = require("./js/controllers");

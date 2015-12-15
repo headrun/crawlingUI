@@ -1,7 +1,9 @@
-var $ = require("jquery");
+"use strict";
+
+var $ = require("jquery"),
+    ipc = require("./ipcAdapter");
 
 var red = "#ea6153";
-var boxSizing = "border-box";
 
 function backupStyle($target) {
 
@@ -23,7 +25,22 @@ function restoreStyle ($target) {
   }
 }
 
+function doHighlight ($target) {
+
+  backupStyle($target);
+
+  $target.attr("ac-data-clicked", true)
+         .css({
+
+           border: "2px solid " + red
+         }); 
+
+  ipc.send("setVal", $target.text());
+}
+
 $(function () {
+
+  var numClicked = 0;
 
   $("body").on("mouseover", function (e) {
 
@@ -62,16 +79,36 @@ $(function () {
 
     if ($target.attr("ac-data-clicked")) {
 
+      numClicked--;
       $target.removeAttr("ac-data-clicked");
+
+      if (numClicked === 0) {
+
+        ipc.send("sheet", "destroySheet");
+      }
     } else {
 
-    backupStyle($target);
+      if (numClicked === 0) {
 
-    $target.attr("ac-data-clicked", true)
-	   .css({
+        ipc.send("getSheet")
+           .then(function (sheet) {
 
-	     border: "2px solid " + red
-	   });
+	     console.log("Fucked here");
+
+	     try {
+
+	       doHighlight($target);
+	     } catch (e) {
+
+	       console.log(e.message);
+             }
+           });
+      } else {
+
+        doHighlight($target);
+      }
+
+      numClicked++;
     }
   });
 });

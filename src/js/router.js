@@ -1,9 +1,8 @@
+"use strict";
+
 var $   = require("jquery"),
     URI = require("urijs");
     
-
-var global = {};
-
 var history = window.history;
 
 var ROUTES = [];
