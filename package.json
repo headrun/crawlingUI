@@ -1,0 +1,42 @@
+{
+  "name": "crawlingui",
+  "version": "0.0.1-beta",
+  "description": "UI Based crawling",
+  "main": "main.js",
+  "scripts": {
+    "start": "webpack --config webpack.config.js;electron .",
+    "postinstall": "webpack --config webpack.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/headrun/crawlingUI.git"
+  },
+  "keywords": [
+    "Crawling"
+  ],
+  "author": "Headrun",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/headrun/crawlingUI/issues"
+  },
+  "homepage": "https://github.com/headrun/crawlingUI#readme",
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.20.0",
+    "babel-loader": "^6.2.9",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-react": "^6.16.0",
+    "css-loader": "^0.26.1",
+    "electron": "^1.4.1",
+    "file-loader": "^0.9.0",
+    "html-loader": "^0.4.4",
+    "html-webpack-plugin": "^2.24.1",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.14.0"
+  }
+}
