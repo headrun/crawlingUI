@@ -1,9 +1,12 @@
 "use strict";
 
 var $ = require("jquery"),
-    ipc = require("./ipcAdapter");
+    ipc = require("./ipcAdapter"),
+    xpathUtils = require("./xpathUtils");
 
 var red = "#ea6153";
+
+var sheet;
 
 function backupStyle($target) {
 
@@ -35,7 +38,32 @@ function doHighlight ($target) {
            border: "2px solid " + red
          }); 
 
+  console.log($target.text());
+
   ipc.send("setVal", $target.text());
+}
+
+function getSheet () {
+
+  return new Promise(function (resolve, reject) {
+
+    if (sheet) {
+
+      return resolve(sheet);
+    }
+
+    ipc.send("getSheet")
+       .then(function (sheetObj) {
+
+               sheet = sheetObj;
+               resolve(sheet);
+       })
+       .catch(function (e) {
+
+         reject(e);
+       });
+
+  });
 }
 
 $(function () {
@@ -71,7 +99,7 @@ $(function () {
   }).on("click", function (e) {
 
     e.preventDefault();
-    e.stopPropagation();
+    e.stopImmediatePropagation();
 
     var $target = $(e.target);
 
@@ -88,27 +116,27 @@ $(function () {
       }
     } else {
 
-      if (numClicked === 0) {
+      var selector = xpathUtils.getElementCSSSelector($target.get(0)),
+          elements = $target.siblings(selector);
 
-        ipc.send("getSheet")
-           .then(function (sheet) {
+      console.log(selector);
 
-	     console.log("Fucked here");
+      numClicked = elements.length;
 
-	     try {
+      console.log(elements.length);
 
-	       doHighlight($target);
-	     } catch (e) {
-
-	       console.log(e.message);
-             }
-           });
-      } else {
+      getSheet().then(function () {
 
         doHighlight($target);
-      }
 
-      numClicked++;
+        $.each(elements, function () {
+
+          doHighlight($(this));
+        });
+      }).catch(function (e) {
+
+        console.log(e);
+      });
     }
   });
 });

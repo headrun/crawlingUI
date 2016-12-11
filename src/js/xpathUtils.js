@@ -43,13 +43,14 @@ exports.getElementTreeXPath = function(element)
     return paths.length ? "/" + paths.join("/") : null;
 };
 
-exports.getElementCSSPath = function(element)
+exports.getElementCSSPath = function(element, includeIds)
 {
+
     var paths = [];
 
     for (; element && element.nodeType == 1; element = element.parentNode)
     {
-        var selector = this.getElementCSSSelector(element);
+        var selector = this.getElementCSSSelector(element, includeIds);
         paths.splice(0, 0, selector);
     }
 
@@ -157,13 +158,13 @@ exports.cssToXPath = function(rule)
 };
 
 
-exports.getElementCSSSelector = function(element)
+exports.getElementCSSSelector = function(element, includeIds)
 {
     if (!element || !element.localName)
         return "null";
 
     var label = element.localName.toLowerCase();
-    if (element.id)
+    if (includeIds && element.id)
         label += "#" + element.id;
 
     if (element.classList && element.classList.length > 0)
