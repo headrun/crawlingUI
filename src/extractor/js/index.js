@@ -1,5 +1,6 @@
 import React    from "react";
 import ReactDOM from "react-dom";
+import Webview from "./Webview.js";
 import styles from "../less/index.less";
 
 const modes = {
@@ -47,7 +48,9 @@ class App extends React.Component {
                    disabled="disabled" value={this.state.url}/>
           </div>
         </header>
-        <div className="browser"></div>
+        <div className="browser">
+          <Webview url={this.state.url}></Webview>
+        </div>
         <footer>
           <input className="form-control" type="text"
                  value={this.state.activePath}
