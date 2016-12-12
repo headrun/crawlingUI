@@ -44,11 +44,13 @@ class Header extends React.Component {
     const logo  = this.state.logo,
           brand = logo.url ? (
                     <a className="navbar-brand"
-                       href={logo.url}>
+                       href={logo.url}
+                       tabIndex="-1">
                       { logo.image ? <img src="{logo.image}"/>
                                    : logo.text}
                     </a>) :
-                    <span className="navbar-brand">
+                    <span className="navbar-brand"
+                          tabIndex="-1">
                       {logo.text}
                     </span>;
 

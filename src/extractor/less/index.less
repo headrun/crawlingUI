@@ -1,1 +1,39 @@
-@import "../../vendor/bootstrap/less/bootstrap.less";
+@import "../../less/base.less";
+
+div.content {
+
+  position: relative;
+  padding: 52px 0;
+
+  header, footer {
+
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background-color: gray;
+  }
+
+  header {
+
+    top: 0;
+  }
+
+  footer {
+
+    display: none;
+    bottom: 0;
+  }
+
+  &.has-footer {
+
+    footer {
+
+      display: block;
+    }
+  }
+
+  div.browser {
+
+    .cover;
+  }
+}
