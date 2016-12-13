@@ -1,7 +1,10 @@
 var $ = require("jquery"),
+    xpathUtils = require("./xpathUtils.js"),
     ipc = require("electron").ipcRenderer;
 
 var red = "#ea6153";
+
+var selectedNodes = [];
 
 function backupStyle($target) {
 
@@ -13,7 +16,7 @@ function backupStyle($target) {
    * @returns {*}
    */
 
-  retunr $target.attr("ac-prev-style",
+  return $target.attr("ac-prev-style",
                       $target.attr("style"));
 }
 
@@ -33,7 +36,7 @@ function restoreStyle ($target) {
   return (
 
     prevStyle ? $target.attr("style", prevStyle)
-              : $target.removeAttr("style");
+              : $target.removeAttr("style")
   );
 }
 
@@ -119,7 +122,8 @@ function onClick (e) {
   e.preventDefault();
   e.stopImmediatePropagation();
 
-  var $target = $(e.target);
+  var $target = $(e.target),
+      selector;
 
   if ($target.attr("ac-data-clicked")) {
 
@@ -127,6 +131,8 @@ function onClick (e) {
   } else {
 
     doSelect($target);
+    selector = xpathUtils.getElementCSSPath($target.get(0));
+    ipc.sendToHost("cssPath", selector);
   }
 }
 
@@ -167,7 +173,7 @@ function startHighlight () {
   });
 }
 
-function stopHighlight () {
+function stopSelection () {
 
   /**
    * Un-Register event handlers and stop hightlighing
@@ -188,6 +194,13 @@ var commands = {
 
   "startSelection": function (selectors) {
 
+    /**
+     * Register event handlers and start hightlighing if
+     * given any selectors
+     *
+     * @param selectors
+     */
+
     if (!selectors || !selectors.length || selectors.length === 0) {
 
       selectors = [];
@@ -203,6 +216,12 @@ var commands = {
   },
   "select": function (selector) {
 
+    /**
+     * given selector highlight the elements
+     *
+     * @param selector
+     */
+
     if (!selector)
       return;
 
@@ -215,6 +234,12 @@ var commands = {
   },
   "deSelect": function (selector) {
 
+    /**
+     * given selector, dehighlight it
+     *
+     * @param selector
+     */
+
     if (!selector)
       return;
 
@@ -225,20 +250,34 @@ var commands = {
       deSelect($(this));
     });
   },
-  "stopHighlight": function () {
+  "stopSelection": function () {
 
-    stopHighlight();
+    /**
+     * Un-Register event handlers and deSelect any
+     * selected elements
+     */
+
+    stopSelection();
   }
 };
 
+/*
+ * Listen for commands from Host and do appropriate
+ * actions
+ */
 ipc.on("command", function (e, name, value) {
+
+  console.log("Got Command");
+  console.log(e);
+  console.log(name);
+  console.log(value);
 
   var method;
 
   switch (name) {
     case "startSelection":
 
-      method = "startHighlight";
+      method = "startSelection";
       break;
     case "select":
 
@@ -250,9 +289,9 @@ ipc.on("command", function (e, name, value) {
       method = "deselect";
       break;
 
-    case "stopHighlight":
+    case "stopSelection":
 
-      method = "stopHighlight";
+      method = "stopSelection";
       break;
 
     default:

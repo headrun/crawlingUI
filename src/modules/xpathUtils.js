@@ -26,7 +26,7 @@ function getElementCSSSelector (element) {
     return label;
 };
 
-function getElementCSSPath = function(element, includeIds) {
+function getElementCSSPath (element, includeIds) {
 
     var paths = [];
 
