@@ -1,3 +1,5 @@
+window.onload = function () {
+
 var $ = require("jquery"),
     xpathUtils = require("./xpathUtils.js"),
     ipc = require("electron").ipcRenderer;
@@ -268,9 +270,6 @@ var commands = {
 ipc.on("command", function (e, name, value) {
 
   console.log("Got Command");
-  console.log(e);
-  console.log(name);
-  console.log(value);
 
   var method;
 
@@ -303,3 +302,5 @@ ipc.on("command", function (e, name, value) {
     commands[method](value);
   }
 });
+
+}
