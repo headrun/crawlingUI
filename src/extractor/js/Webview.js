@@ -65,9 +65,6 @@ class Webview extends React.Component {
 
   componentWillReceiveProps(nextProps) {
 
-
-    console.log(nextProps.activePath);
-
     const activePath = nextProps.activePath;
 
     if (this.props.activePath === activePath)

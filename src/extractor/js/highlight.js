@@ -55,6 +55,19 @@ function deSelect($target) {
    return $target.removeAttr("ac-data-clicked");
 }
 
+function deSelectAll () {
+
+  /**
+   * deSelect all elements that are previously selected
+   *
+   */
+
+  $("[ac-data-clicked]").each(function () {
+
+    deSelect($(this));
+  });
+}
+
 function doSelect ($target) {
 
   /**
@@ -74,6 +87,21 @@ function doSelect ($target) {
                 .css({
                        outline: "2px solid " + red
                      });
+}
+
+function highlightByCssPath (path) {
+
+  /**
+   * Given a css selector , highlights them
+   *
+   * @param path
+   * @returns {*}
+   */
+
+  return $(path).each(function () {
+
+    doSelect($(this));
+  });
 }
 
 function handleMouseOver (e) {
@@ -138,22 +166,10 @@ function onClick (e) {
     selector = xpathUtils.getElementCSSPath($target.get(0));
     ipc.sendToHost("cssPath", selector);
   }
+
+  return false;
 }
 
-function highlightByCssPath (path) {
-
-  /**
-   * Given a css selector , highlights them
-   *
-   * @param path
-   * @returns {*}
-   */
-
-  return $(path).each(function () {
-
-    doSelect($(this));
-  });
-}
 
 function startHighlight () {
 
@@ -174,16 +190,6 @@ function startHighlight () {
 
       resolve();
     });
-  });
-}
-
-function deSelectAll () {
-
-  console.log("num selected " + $("[ac-data-clicked]").length);
-
-  $("[ac-data-clicked]").each(function () {
-
-    deSelect($(this));
   });
 }
 
