@@ -1,4 +1,5 @@
 var HtmlWebpackPlugin = require("html-webpack-plugin"),
+    CopyWebpackPlugin = require('copy-webpack-plugin'),
     webpack = require('webpack');
 
 module.exports = {
@@ -54,6 +55,13 @@ module.exports = {
               new webpack.optimize.CommonsChunkPlugin({
 
                 name: 'common'
-              })
+              }),
+              new CopyWebpackPlugin([
+
+                {"from": "./src/extractor/js/highlight.js",
+                 "to"  : "extractor/highlight.js"},
+                {"from": "./src/modules/xpathUtils.js",
+                 "to"  : "extractor/xpathUtils.js"}
+              ])
        ]
 }
