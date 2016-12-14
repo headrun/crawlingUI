@@ -1,6 +1,6 @@
 function getSiblingIndex (element) {
 
-  var index = 0;
+  var index = 1;
 
   for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling)
   {
@@ -21,7 +21,17 @@ function getElementCSSSelector (element) {
 
     var label = element.localName.toLowerCase();
 
-    label = label + ":nth-child(" + getSiblingIndex(element) + ")";
+    var hasSibling   = element.previousSibling || element.nextSibling,
+        siblingIndex = getSiblingIndex(element);
+
+    if (label === "html" || label === "body") {
+
+      return label;
+    }
+
+    label = label + (hasSibling
+                     ? ":nth-of-type(" + siblingIndex + ")"
+                     : "");
 
     return label;
 };

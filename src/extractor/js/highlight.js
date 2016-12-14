@@ -58,12 +58,15 @@ function deSelect($target) {
 function doSelect ($target) {
 
   /**
+   * Restore any styles given on hover,
    * Backup existing styles and
    * Highlight the element by adding styles
    *
    * @param $target
    * @returns {*}
    */
+
+  restoreStyle($target);
 
   backupStyle($target);
 
@@ -129,10 +132,9 @@ function onClick (e) {
 
   if ($target.attr("ac-data-clicked")) {
 
-    deSelect($target);
+    ipc.sendToHost("cssPath", "");
   } else {
 
-    doSelect($target);
     selector = xpathUtils.getElementCSSPath($target.get(0));
     ipc.sendToHost("cssPath", selector);
   }
@@ -175,6 +177,16 @@ function startHighlight () {
   });
 }
 
+function deSelectAll () {
+
+  console.log("num selected " + $("[ac-data-clicked]").length);
+
+  $("[ac-data-clicked]").each(function () {
+
+    deSelect($(this));
+  });
+}
+
 function stopSelection () {
 
   /**
@@ -182,10 +194,7 @@ function stopSelection () {
    * so that user can resume normal navigation
    */
 
-   $("[ac-data-clicked]").each(function () {
-
-     deSelect($(this));
-   });
+   deSelectAll();
 
    $("body").off("mouseover", handleMouseOver)
             .off("mouseout", onMouseOut)
@@ -202,6 +211,9 @@ var commands = {
      *
      * @param selectors
      */
+
+     console.log("In start sel");
+     console.log(selectors);
 
     if (!selectors || !selectors.length || selectors.length === 0) {
 
@@ -224,10 +236,15 @@ var commands = {
      * @param selector
      */
 
+    console.log("selector is ");
+    console.log(selector);
+
     if (!selector)
       return;
 
     var $elements = $(selector);
+
+    console.log($elements.length);
 
     $elements.each(function() {
 
@@ -252,6 +269,11 @@ var commands = {
       deSelect($(this));
     });
   },
+  "deSelectAll": function () {
+
+    console.log("Fucking deSelectAll");
+    deSelectAll();
+  },
   "stopSelection": function () {
 
     /**
@@ -269,7 +291,7 @@ var commands = {
  */
 ipc.on("command", function (e, name, value) {
 
-  console.log("Got Command");
+  console.log("Got Command " + name + " value " + value);
 
   var method;
 
@@ -286,6 +308,10 @@ ipc.on("command", function (e, name, value) {
     case "deselect":
 
       method = "deselect";
+      break;
+
+    case "deSelectAll":
+      method = "deSelectAll"
       break;
 
     case "stopSelection":

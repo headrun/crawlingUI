@@ -49,12 +49,15 @@ class App extends React.Component {
           </div>
         </header>
         <div className="browser">
-          <Webview url={this.state.url}></Webview>
+          <Webview url={this.state.url}
+                   activePath={this.state.activePath}
+                   setActivePath={this.setActivePath.bind(this)}>
+          </Webview>
         </div>
         <footer>
           <input className="form-control" type="text"
                  value={this.state.activePath}
-                 onChange={this.setActivePath.bind(this)}/>
+                 onChange={(e) => {this.setActivePath(e.target.value)}}/>
         </footer>
       </div>
     )

@@ -13,7 +13,7 @@ class App extends React.Component {
 
 		this.state = {
 
-			"urlsValue"   : "",
+			"urlsValue"   : "https://pamidi.me",
       "isValidInput": true
 		};
 	}

@@ -26,14 +26,33 @@ class Webview extends React.Component {
 
     this.setGuestLoading(false);
 
-    this.refs.webview.send("command", "startSelection");
+    const activePaths = [];
+
+    if (this.props.activePath) {
+
+      activePaths.push(this.props.activePath);
+    }
+
+    this.refs.webview.send("command",
+                           "startSelection",
+                           activePaths);
 
     console.log("Guest loaded");
   }
 
-  __onIPCMessage () {
+  __onIPCMessage (e) {
 
-    console.log(`Got message from guest`);
+    if (!e.channel || e.channel !== "cssPath") {
+
+      return;
+    }
+
+    var cssPath = e.args[0];
+
+    if (cssPath) {
+
+      this.props.setActivePath(cssPath);
+    }
   }
 
   setGuestLoading (isLoading) {
@@ -44,9 +63,31 @@ class Webview extends React.Component {
     });
   }
 
+  componentWillReceiveProps(nextProps) {
+
+
+    console.log(nextProps.activePath);
+
+    const activePath = nextProps.activePath;
+
+    if (this.props.activePath === activePath)
+      return;
+
+    this.refs.webview.send("command",
+                           "deSelectAll",
+                           this.props.activePath);
+
+    if (activePath) {
+
+      this.refs.webview.send("command",
+                             "select",
+                             activePath);
+    }
+  }
+
   componentDidMount () {
 
-    console.log("Component mounted");
+    console.log("Mounted");
 
     const webview = this.refs.webview;
 
