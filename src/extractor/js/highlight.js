@@ -6,7 +6,7 @@ var $ = require("jquery"),
 
 var red = "#ea6153";
 
-var selectedNodes = [];
+var currentSelector = "";
 
 function backupStyle($target) {
 
@@ -156,7 +156,7 @@ function onClick (e) {
   e.stopImmediatePropagation();
 
   var $target = $(e.target),
-      selector;
+      selector, commonSelector;
 
   if ($target.attr("ac-data-clicked")) {
 
@@ -164,6 +164,18 @@ function onClick (e) {
   } else {
 
     selector = xpathUtils.getElementCSSPath($target.get(0));
+
+    if (!currentSelector) {
+
+      currentSelector = selector;
+    } else {
+
+      commonSelector = xpathUtils.getCommonCSSPath([currentSelector,
+                                                    selector]);
+
+      selector = commonSelector || selector;
+    }
+
     ipc.sendToHost("cssPath", selector);
   }
 
@@ -218,9 +230,6 @@ var commands = {
      * @param selectors
      */
 
-     console.log("In start sel");
-     console.log(selectors);
-
     if (!selectors || !selectors.length || selectors.length === 0) {
 
       selectors = [];
@@ -242,15 +251,10 @@ var commands = {
      * @param selector
      */
 
-    console.log("selector is ");
-    console.log(selector);
-
     if (!selector)
       return;
 
     var $elements = $(selector);
-
-    console.log($elements.length);
 
     $elements.each(function() {
 
@@ -277,7 +281,6 @@ var commands = {
   },
   "deSelectAll": function () {
 
-    console.log("Fucking deSelectAll");
     deSelectAll();
   },
   "stopSelection": function () {
@@ -296,8 +299,6 @@ var commands = {
  * actions
  */
 ipc.on("command", function (e, name, value) {
-
-  console.log("Got Command " + name + " value " + value);
 
   var method;
 

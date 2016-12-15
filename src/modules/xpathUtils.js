@@ -86,7 +86,7 @@ function getElementCSSPath (element, includeIds, seperatePaths) {
 
 function getCommonCSSPath (paths) {
 
-  if (!paths || !Array.isArray(paths) || elements.length === 0) {
+  if (!paths || !Array.isArray(paths) || paths.length === 0) {
 
     return null;
   }
@@ -94,14 +94,15 @@ function getCommonCSSPath (paths) {
   var firstElementPaths = paths.shift().split(" > ");
 
   var pathsCanBeMerged = true,
-      commomLength = firstElementPaths.length;
+      commomLength = firstElementPaths.length,
+      isSameLength = true;
 
-  var pathArrays = elements.map(paths, function (path) {
+  var pathArrays = paths.map(function (path) {
 
                      var currentPaths = path.split(" > ");
 
                      isSameLength = isSameLength
-                                    && currentPaths.length !== commomLength;
+                                    && currentPaths.length === commomLength;
 
                      return currentPaths;
                    });
@@ -111,26 +112,32 @@ function getCommonCSSPath (paths) {
     return paths;
   }
 
-  var currentCommonPath = firstElementPaths[0],
+  var currentCommonPath = [],
       hasCommonPath = true;
 
-  elements.forEach(pathArrays, function (pathArray, index) {
+  pathArrays[0].forEach(function (currentElementPath, index) {
 
     if (!hasCommonPath)
       return
 
-    var currentElementPath = pathArray[index],
-        referencePath      = firstElementPaths[index];
+    var referencePath = firstElementPaths[index];
 
     if (currentElementPath === referencePath) {
 
-      currentCommonPath += " > " + currentElementPath;
+      if (currentCommonPath.length === 0) {
+
+        currentCommonPath = currentElementPath;
+      } else {
+
+        currentCommonPath += " > " + currentElementPath;
+      }
+
       return;
     }
 
     var currentElement = document.querySelectorAll(currentCommonPath
                                                    + " > " + currentElementPath)[0],
-        referenceElement = document.querySelectorAll(referencePath
+        referenceElement = document.querySelectorAll(currentCommonPath
                                                      + " > " + referencePath)[0];
 
     if (currentElement.nodeName !== referenceElement.nodeName) {
@@ -138,10 +145,15 @@ function getCommonCSSPath (paths) {
       hasCommonPath = false;
       return;
     }
+
+    currentCommonPath += " > " + currentElement.nodeName.toLowerCase();
   });
+
+  return hasCommonPath ? currentCommonPath : null;
 }
 
 module.exports = {
 
-  getElementCSSPath: getElementCSSPath
+  getElementCSSPath: getElementCSSPath,
+  getCommonCSSPath : getCommonCSSPath
 };

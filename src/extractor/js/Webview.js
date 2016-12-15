@@ -84,8 +84,6 @@ class Webview extends React.Component {
 
   componentDidMount () {
 
-    console.log("Mounted");
-
     const webview = this.refs.webview;
 
     this.setGuestLoading(true);
