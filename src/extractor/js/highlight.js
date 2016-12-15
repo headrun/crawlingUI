@@ -152,6 +152,11 @@ function onClick (e) {
    * @param e
    */
 
+  if (e.ctrlKey) {
+
+    return true;
+  }
+
   e.preventDefault();
   e.stopImmediatePropagation();
 

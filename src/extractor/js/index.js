@@ -3,11 +3,7 @@ import ReactDOM from "react-dom";
 import Webview from "./Webview.js";
 import styles from "../less/index.less";
 
-const modes = {
-
-  "website": "w",
-  "data"   : "d"
-};
+const modes = { "website": "w", "data"   : "d" };
 
 class App extends React.Component {
 
