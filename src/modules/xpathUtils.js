@@ -158,7 +158,7 @@ function getCommonCSSPath (paths) {
   return hasCommonPath ? currentCommonPath : null;
 }
 
-function isMatching (path, nodes) {
+function getMatch (path, nodes) {
 
   /**
    * Give a patha and NodeList, returns if both sets match
@@ -166,6 +166,8 @@ function isMatching (path, nodes) {
    * @param {string} path
    * @param {NodeList} nodes
    */
+
+  console.log(path + " in getMatch");
 
   if (!(nodes instanceof NodeList)) {
 
@@ -197,19 +199,32 @@ function isMatching (path, nodes) {
     }
   }
 
-  return numNodes === numMatching;
+  return {
+          "match": numNodes === numMatching,
+          "percent": (numMatching/numNodes) * 100
+         };
 }
 
 function getAttributesSelector (nodes) {
 
   var commonArributesHash = {},
       allAttributes = nodes.item(0).attributes,
-      selector;
+      selector = "";
+
+  if (allAttributes.length === 0) {
+
+    return "";
+  }
 
   for (var i = 0, name, value;i < allAttributes.length; i++) {
 
     name = allAttributes[i].name.toLowerCase();
     value = allAttributes[i].value;
+
+    if (name === "style") {
+
+      continue;
+    }
 
     if (name === "class") {
 
@@ -220,7 +235,7 @@ function getAttributesSelector (nodes) {
     }
   }
 
-  var commonArributesList = Object.keys(commonArributesList);
+  var commonArributesList = Object.keys(commonArributesHash);
 
   for (var i=0, node; i < nodes.length; i++) {
 
@@ -275,32 +290,127 @@ function getAttributesSelector (nodes) {
   return selector;
 }
 
-function optimise (path) {
+function _optimise (nodes, subPath, optimisedPath) {
 
-  if (!path)
-    return null;
-
-  var nodes = document.querySelectorAll(path);
-
-  if (nodes.length === 0) {
-
-    return null;
-  }
-
-  var optimisedPath = elements[0].nodeName.toLowerCase();
-
-  if (isMatching(nodes, document.querySelectorAll(optimisedPath))) {
+  if (!subPath) {
 
     return optimisedPath;
   }
 
-  optimisedPath += getAttributesSelector(nodes);
+  var currentPath = optimisedPath = optimisedPath || "";
 
-  
+  isLeafNode = optimisedPath.length === 0;
+
+  console.log("subpath   " + subPath );
+
+  subPath = subPath.split(" > ");
+
+  var positionSelector = subPath.pop(),
+      nodeName = positionSelector.match(/^[^\:$]+/)[0];
+
+  var matches = [], match;
+
+  currentPath = nodeName + (!isLeafNode ? " " + optimisedPath
+                                        : "");
+
+  match = getMatch(currentPath, nodes);
+
+  if (match.match) {
+
+    return currentPath;
+  }
+
+  matches.push({"selector": currentPath, "matchPercent": match.percent});
+
+  var attributesSelector = getAttributesSelector(nodes);
+
+  currentPath = nodeName + attributesSelector + (!isLeafNode ? " " + optimisedPath
+                                                             : "");
+
+  match = getMatch(currentPath, nodes);
+
+  if (match.match) {
+
+    return currentPath;
+  }
+
+  matches.push({"selector": currentPath, "matchPercent": match.percent});
+
+  if (!isLeafNode) {
+
+    currentPath = nodeName + attributesSelector + " > " + optimisedPath;
+
+    match = getMatch(currentPath, nodes);
+
+    if (match.match) {
+
+      return currentPath;
+    }
+
+    matches.push({"selector": currentPath, "matchPercent": match.percent});
+  }
+
+  var currentPath      = positionSelector + (!isLeafNode ? " " + optimisedPath
+                                                         : "");
+
+  subPath = subPath.join(" > ");
+
+  match = getMatch(currentPath, nodes);
+
+  if (match.match) {
+
+    return currentPath;
+  }
+
+  matches.push({"selector": currentPath, "matchPercent": match.percent});
+
+  if (!isLeafNode) {
+
+    currentPath = positionSelector + " > " + optimisedPath;
+
+    match = getMatch(currentPath, nodes);
+
+    if (match.match) {
+
+      return currentPath;
+    }
+
+    matches.push({"selector": currentPath, "matchPercent": match.percent});
+  }
+
+  matches.sort(function (match1, match2) {
+
+    if (match1.matchPercent > match2.matchPercent) {
+
+      return -1;
+    }
+
+    if (match1.matchPercent < match2.matchPercent) {
+
+      return 1;
+    }
+
+    return 0;
+  });
+
+  optimisedPath = matches[0].selector;
+
+  return _optimise(nodes, subPath, optimisedPath);
+}
+
+function optimise (path) {
+
+  if (!path)
+    return "";
+
+  nodes = document.querySelectorAll(path);
+
+  return _optimise(nodes, path);
 }
 
 module.exports = {
 
   getElementCSSPath: getElementCSSPath,
-  getCommonCSSPath : getCommonCSSPath
+  getCommonCSSPath : getCommonCSSPath,
+  optimise         : optimise
 };

@@ -19,7 +19,7 @@ class Webview extends React.Component {
 
   __logGuestMessages (e) {
 
-    console.log(`Guest: ${e.message}`);
+    console.log(`Guest: ${e.sourceId} : ${e.line}\n${e.message}`);
   }
 
   __handleContentLoaded () {
@@ -37,7 +37,6 @@ class Webview extends React.Component {
                            "startSelection",
                            activePaths);
 
-    console.log("Guest loaded");
   }
 
   __onIPCMessage (e) {
@@ -61,6 +60,8 @@ class Webview extends React.Component {
 
       "isGuestLoading": !!isLoading
     });
+
+    console.log("Guest loaded");
   }
 
   componentWillReceiveProps(nextProps) {

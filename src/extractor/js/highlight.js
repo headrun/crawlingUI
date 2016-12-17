@@ -181,6 +181,8 @@ function onClick (e) {
       selector = commonSelector || selector;
     }
 
+    selector = xpathUtils.optimise(selector);
+
     ipc.sendToHost("cssPath", selector);
   }
 
