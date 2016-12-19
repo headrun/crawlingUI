@@ -170,16 +170,15 @@ function onClick (e) {
 
     selector = xpathUtils.getElementCSSPath($target.get(0));
 
-    if (!currentSelector) {
-
-      currentSelector = selector;
-    } else {
+    if (currentSelector) {
 
       commonSelector = xpathUtils.getCommonCSSPath([currentSelector,
                                                     selector]);
 
       selector = commonSelector || selector;
     }
+
+    currentSelector = selector;
 
     selector = xpathUtils.optimise(selector);
 

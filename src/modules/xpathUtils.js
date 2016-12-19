@@ -99,6 +99,8 @@ function getCommonCSSPath (paths) {
 
   var firstElementPaths = paths.shift().split(" > ");
 
+  console.log("Common Paths " + paths);
+
   var pathsCanBeMerged = true,
       commomLength = firstElementPaths.length,
       isSameLength = true;
@@ -115,7 +117,7 @@ function getCommonCSSPath (paths) {
 
   if (!isSameLength) {
 
-    return paths;
+    return null;
   }
 
   var currentCommonPath = [],
@@ -178,11 +180,6 @@ function getMatch (path, nodes) {
       numNodes       = nodes.length,
       numNodesByPath = nodesByPath.length;
 
-  if (numNodesByPath !== numNodes) {
-
-    return false;
-  }
-
   var numMatching = 0;
 
   for (var i = 0, currentNode; i < numNodes; i++) {
@@ -199,11 +196,18 @@ function getMatch (path, nodes) {
     }
   }
 
-  return {
+  console.log(JSON.stringify({
           "match": numNodes === numMatching,
-          "percent": (numMatching/numNodes) * 100
+          "percent": (numNodesByPath / numNodes) * 100
+        }));
+
+  return {
+          "match": numNodesByPath === numNodes && numNodes === numMatching,
+          "percent": (numNodesByPath / numNodes) * 100
          };
 }
+
+var attributesWhitelist = ["class", "name"];
 
 function getAttributesSelector (nodes) {
 
@@ -221,14 +225,19 @@ function getAttributesSelector (nodes) {
     name = allAttributes[i].name.toLowerCase();
     value = allAttributes[i].value;
 
+    if (attributesWhitelist.indexOf(name) < 0) {
+
+      continue;
+    }
+
     if (name === "style") {
 
       continue;
     }
 
-    if (name === "class") {
+    if (name === "class" && value.trim()) {
 
-      commonArributesHash[name] = value.split(/\s+/);
+      commonArributesHash[name] = value.trim().split(/\s+/);
     } else {
 
       commonArributesHash[name] = value;
@@ -303,10 +312,14 @@ function _optimise (nodes, subPath, optimisedPath) {
 
   console.log("subpath   " + subPath );
 
+  var subPathElements = document.querySelectorAll(subPath);
+
   subPath = subPath.split(" > ");
 
   var positionSelector = subPath.pop(),
       nodeName = positionSelector.match(/^[^\:$]+/)[0];
+
+  subPath = subPath.join(" > ");
 
   var matches = [], match;
 
@@ -322,7 +335,7 @@ function _optimise (nodes, subPath, optimisedPath) {
 
   matches.push({"selector": currentPath, "matchPercent": match.percent});
 
-  var attributesSelector = getAttributesSelector(nodes);
+  var attributesSelector = getAttributesSelector(subPathElements);
 
   currentPath = nodeName + attributesSelector + (!isLeafNode ? " " + optimisedPath
                                                              : "");
@@ -350,23 +363,10 @@ function _optimise (nodes, subPath, optimisedPath) {
     matches.push({"selector": currentPath, "matchPercent": match.percent});
   }
 
-  var currentPath      = positionSelector + (!isLeafNode ? " " + optimisedPath
-                                                         : "");
+  if (positionSelector !== nodeName) {
 
-  subPath = subPath.join(" > ");
-
-  match = getMatch(currentPath, nodes);
-
-  if (match.match) {
-
-    return currentPath;
-  }
-
-  matches.push({"selector": currentPath, "matchPercent": match.percent});
-
-  if (!isLeafNode) {
-
-    currentPath = positionSelector + " > " + optimisedPath;
+    var currentPath = positionSelector + (!isLeafNode ? " " + optimisedPath
+                                                        : "");
 
     match = getMatch(currentPath, nodes);
 
@@ -376,22 +376,38 @@ function _optimise (nodes, subPath, optimisedPath) {
     }
 
     matches.push({"selector": currentPath, "matchPercent": match.percent});
+
+    if (!isLeafNode) {
+
+      currentPath = positionSelector + " > " + optimisedPath;
+
+      match = getMatch(currentPath, nodes);
+
+      if (match.match) {
+
+        return currentPath;
+      }
+
+      matches.push({"selector": currentPath, "matchPercent": match.percent});
+    }
   }
 
   matches.sort(function (match1, match2) {
 
     if (match1.matchPercent > match2.matchPercent) {
 
-      return -1;
+      return 1;
     }
 
     if (match1.matchPercent < match2.matchPercent) {
 
-      return 1;
+      return -1;
     }
 
     return 0;
   });
+
+  console.log("matches: " + JSON.stringify(matches));
 
   optimisedPath = matches[0].selector;
 
