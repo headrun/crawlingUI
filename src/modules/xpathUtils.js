@@ -207,7 +207,7 @@ function getMatch (path, nodes) {
          };
 }
 
-var attributesWhitelist = ["class", "name"];
+var attributesWhitelist = ["class", "name", "id", "itemprop"];
 
 function getAttributesSelector (nodes) {
 
@@ -226,11 +226,6 @@ function getAttributesSelector (nodes) {
     value = allAttributes[i].value;
 
     if (attributesWhitelist.indexOf(name) < 0) {
-
-      continue;
-    }
-
-    if (name === "style") {
 
       continue;
     }
@@ -278,6 +273,9 @@ function getAttributesSelector (nodes) {
       if (removeAttribute) {
 
         delete commonArributesHash[attrName];
+      } else {
+
+        commonArributesHash[attrName] = attrValue;
       }
 
       commonArributesList = Object.keys(commonArributesHash);

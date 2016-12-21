@@ -57,7 +57,8 @@ class App extends React.Component {
 
     if (isValidInput) {
 
-      window.location = `./extractor/index.html?url=${urlsValue}`;
+      window.location = `./extractor/index.html?`+
+                        `url=${encodeURIComponent(urlsValue)}`;
     }
 	}
 

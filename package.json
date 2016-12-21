@@ -5,7 +5,13 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "webpack --config webpack.config.js"
+    "postinstall": "webpack --config webpack.config.js",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "env": "development",
+  "build": {
+    "appId": "crawlingUI"
   },
   "repository": {
     "type": "git",
@@ -29,6 +35,7 @@
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.26.1",
     "electron": "^1.4.1",
+    "electron-builder": "^10.8.1",
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.4",
     "html-webpack-plugin": "^2.24.1",

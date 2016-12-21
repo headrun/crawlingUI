@@ -13,9 +13,14 @@ class App extends React.Component {
 
     const location = window.location.href;
 
+    let url = location.match(/url\=([^&|$]+)/);
+
+    url = url && decodeURIComponent((url[1] || "").trim()) || "";
+
     this.state = {
 
-      "url" : (location.match(/url\=([^&|$]+)/)[1] || "").trim(),
+      "url" : url,
+      "openUrl": url,
       "mode": modes.website,
       "activePath": ""
     };
@@ -26,9 +31,29 @@ class App extends React.Component {
     this.setState({mode});
   }
 
+  setUrl (url="") {
+
+    url = url.trim();
+
+    this.setState({url});
+  }
+
+  setOpenUrl (openUrl="") {
+
+    openUrl = openUrl.trim();
+
+    this.setState({openUrl});
+  }
+
   setActivePath (activePath="") {
 
     this.setState({activePath});
+  }
+
+  onKeydown (e) {
+
+    console.log(e.keyCode);
+    return e.keyCode === 13 && this.setOpenUrl(e.target.value);
   }
 
   render () {
@@ -40,12 +65,15 @@ class App extends React.Component {
             <span className="input-group-addon">
               <a href="../index.html">&lt; Back</a>
             </span>
-            <input className="form-control" type="text"
-                   disabled="disabled" value={this.state.url}/>
+            <input className="form-control"
+                   type="text"
+                   value={this.state.url}
+                   onChange={(e) => this.setUrl(e.target.value)}
+                   onKeyDown={(e) => this.onKeydown(e)}/>
           </div>
         </header>
         <div className="browser">
-          <Webview url={this.state.url}
+          <Webview url={this.state.openUrl}
                    activePath={this.state.activePath}
                    setActivePath={this.setActivePath.bind(this)}>
           </Webview>
