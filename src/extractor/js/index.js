@@ -3,8 +3,11 @@ import ReactDOM from "react-dom";
 import Webview from "./Webview.js";
 import styles from "../less/index.less";
 import codeIcon from "../../images/code.svg";
+import globe from "../../images/globe.svg";
 
 const modes = { "website": "w", "data"   : "d" };
+
+const newTabData = {"name": "New Column", "selector": ""};
 
 class App extends React.Component {
 
@@ -18,16 +21,24 @@ class App extends React.Component {
 
     url = url && decodeURIComponent((url[1] || "").trim()) || "";
 
+    const tabs = [Object.assign({}, newTabData)];
+
     this.state = {
 
-      "url" : url || "https://pamidi.me",
-      "openUrl": url,
-      "mode": modes.website,
-      "activePath": "",
-      "isDevToolsOpen": false
+      "url"           : url || "https://pamidi.me",
+      "openUrl"       : url,
+      "mode"          : modes.website,
+      "activePath"    : "",
+      "isDevToolsOpen": false,
+      "activeTabIndex": 0,
+      "tabs"          : tabs /* [{"name": "tabname", "selector": ".//div"}] */,
+      "data"          : [],
+      "reloadUrl"     : false
     };
 
+    this.tabElements = {}; //Tab elements dom refereces
     this.toggleDevTools = this.toggleDevTools.bind(this);
+    this.handleNewTab = this.handleNewTab.bind(this);
   }
 
   setMode (mode=modes.website) {
@@ -51,13 +62,67 @@ class App extends React.Component {
 
   setActivePath (activePath="") {
 
-    this.setState({activePath});
+    const tabs = this.state.tabs;
+
+    tabs[this.state.activeTabIndex].selector = activePath;
+
+    this.setState({activePath, tabs});
+  }
+
+  setActiveTab (activeTabIndex=0) {
+
+    const toBeActiveTab = this.state.tabs[activeTabIndex],
+          activePath    = toBeActiveTab.selector;
+
+    this.setState({activeTabIndex, activePath});
+  }
+
+  setTabName (tab, name, index) {
+
+    tab.name = name;
+    this.setState({"tabs": this.state.tabs}, () => {
+
+      const input = this.tabElements[index].children[1];
+      input.value = "";
+      input.focus();
+    });
+  }
+
+  handleNewTab (e) {
+
+    e.preventDefault();
+
+    const tabs = this.state.tabs,
+          newTabIndex = tabs.length;
+
+    tabs.push(Object.assign({}, newTabData));
+
+    this.setState({tabs}, () => {
+
+      this.setActiveTab(newTabIndex);
+      this.tabElements[newTabIndex].focus();
+    });
   }
 
   onKeydown (e) {
 
-    console.log(e.keyCode);
-    return e.keyCode === 13 && this.setOpenUrl(e.target.value);
+    if (e.keyCode !== 13)
+      return
+
+    if (this.state.openUrl === e.target.value) {
+
+      //reload webview
+      return this.setState({reloadUrl: true},
+                            () => this.setState({reloadUrl: false}));
+    }
+
+    this.setState({
+
+      activePath: "",
+      activeTabIndex: 0,
+      tabs: [Object.assign({}, newTabData)],
+      openUrl: e.target.value
+    });
   }
 
   toggleDevTools (e) {
@@ -70,6 +135,68 @@ class App extends React.Component {
 
   render () {
 
+    function getTabName (e, tabname) {
+
+      if (e.keyCode === 8) {
+
+        return tabname.substr(0, tabname.length - 1);
+      }
+
+      return tabname + e.target.value;
+    }
+
+    const tabsList = this.state.tabs.map((tab, index) => {
+
+                       return (<li key={tab.name + index}
+                                   className={index === this.state.activeTabIndex
+                                                        ? "active"
+                                                        : ""}>
+                                 <a href="#"
+                                    ref={
+                                         (element) => {
+                                           this.tabElements[index] = element;
+                                         }
+                                        }
+                                    onClick={(e) => {
+                                                      e.preventDefault();
+                                                      this.setActiveTab(index);
+                                                    }
+                                            }>
+                                   <span onClick={
+                                                  (e) => {
+                                                    e.target.nextSibling.focus()
+                                                  }
+                                                 }>
+                                     {tab.name}
+                                   </span>
+                                   <input type="text"
+                                          onKeyUp={(e) => {
+                                            this.setTabName(
+                                              tab,
+                                              getTabName(e, tab.name),
+                                              index
+                                            )}
+                                          }
+                                          className="cursor"/>
+                                 </a>
+                               </li>);
+                     });
+
+    let dataCounter = 0;
+
+    function getDataItem (text) {
+
+      return <li key={dataCounter++} className="list-group-item">{text}</li>
+    }
+
+    const dataList = this.state.data.map(getDataItem);
+
+    if (dataList.length === 0) {
+
+      //put dummy rows
+      Array(10).forEach(() => dataList.push(getDataItem("")));
+    }
+
     return (
       <div className={"content"
                       + (this.state.activePath ? " has-footer" : "")
@@ -77,9 +204,8 @@ class App extends React.Component {
                      }>
         <header>
           <div className="input-group">
-            <span className="input-group-addon toggle-dev-tools"
-                  onClick={this.toggleDevTools}>
-              <a href="../index.html">&lt; Back</a>
+            <span className="input-group-addon">
+              <img src={globe} />
             </span>
             <input className="form-control"
                    type="text"
@@ -88,23 +214,42 @@ class App extends React.Component {
                    onKeyDown={(e) => this.onKeydown(e)}/>
           </div>
         </header>
-        <div className="browser">
-          <Webview url={this.state.openUrl}
-                   activePath={this.state.activePath}
-                   setActivePath={this.setActivePath.bind(this)}
-                   setUrl={(url) => this.setState({url, "openUrl": url})}
-                   showDevTools={this.state.isDevToolsOpen}>
-          </Webview>
+        <div className="content-body">
+          <ul className="nav nav-tabs">
+            {tabsList}
+            <li>
+              <a href="#"
+                 onClick={this.handleNewTab}>+</a>
+            </li>
+          </ul>
+          <div className="browser">
+            <Webview url={this.state.openUrl}
+                     activePath={this.state.activePath}
+                     setActivePath={this.setActivePath.bind(this)}
+                     setUrl={(url) => this.setState({url, "openUrl": url})}
+                     showDevTools={this.state.isDevToolsOpen}
+                     setData={(data) => this.setState({data})}
+                     reloadUrl={this.state.reloadUrl}>
+            </Webview>
+          </div>
         </div>
         <footer>
-          <div className="input-group">
-            <div className="input-group-addon"
-                 onClick={this.toggleDevTools}>
-              <img src={codeIcon} />
+          <div className="footer-content">
+            <div className="input-group">
+              <div className="input-group-addon"
+                   onClick={this.toggleDevTools}>
+                <img src={codeIcon} />
+              </div>
+              <input className="form-control" type="text"
+                     value={this.state.activePath}
+                     onChange={(e) => {this.setActivePath(e.target.value)}}/>
             </div>
-            <input className="form-control" type="text"
-                   value={this.state.activePath}
-                   onChange={(e) => {this.setActivePath(e.target.value)}}/>
+            <div className="sample-data">
+              <p><b>Sample Data:</b> ({this.state.data.length + " Records"})</p>
+              <ul className="list-group">
+                {dataList}
+              </ul>
+            </div>
           </div>
         </footer>
       </div>

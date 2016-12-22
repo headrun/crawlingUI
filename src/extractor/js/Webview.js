@@ -1,6 +1,8 @@
 import React    from "react";
 import ReactDOM from "react-dom";
 
+const validChannels = ["xpath", "css", "data"];
+
 class Webview extends React.Component {
 
   constructor (props) {
@@ -45,16 +47,22 @@ class Webview extends React.Component {
 
   __handleIPCMessage (e) {
 
-    if (!e.channel || e.channel !== "xpath") {
+    if (!e.channel || validChannels.indexOf(e.channel) < 0) {
 
       return;
     }
 
-    var cssPath = e.args[0];
+    if (e.channel === "xpath") {
 
-    if (cssPath) {
+      const cssPath = e.args[0];
 
-      this.props.setActivePath(cssPath);
+      if (cssPath) {
+
+        this.props.setActivePath(cssPath);
+      }
+    } else if (e.channel === "data") {
+
+      this.props.setData(e.args[0] || []);
     }
   }
 
@@ -102,6 +110,11 @@ class Webview extends React.Component {
 
     const webview = this.refs.webview,
           activePath = nextProps.activePath;
+
+    if (nextProps.reloadUrl) {
+
+      return webview.reload();
+    }
 
     if (this.props.activePath !== activePath) {
 

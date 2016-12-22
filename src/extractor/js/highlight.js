@@ -285,11 +285,15 @@
 
         console.log("snapshotLength " + elements.snapshotLength);
 
+        const data = [];
+
         for (var i = 0, currentElement; i < elements.snapshotLength; i++) {
 
           currentElement = elements.snapshotItem(i);
 
           if (currentElement) {
+
+            data.push(currentElement.textContent);
 
             if (textNodeTypes.indexOf(currentElement.nodeType) >= 0) {
 
@@ -303,6 +307,8 @@
             doSelect(currentElement);
           }
         }
+
+        ipc.sendToHost("data", data);
       },
       "deSelect": function (selector) {
 
