@@ -99,8 +99,6 @@ function getCommonCSSPath (paths) {
 
   var firstElementPaths = paths.shift().split(" > ");
 
-  console.log("Common Paths " + paths);
-
   var pathsCanBeMerged = true,
       commomLength = firstElementPaths.length,
       isSameLength = true;
@@ -169,7 +167,7 @@ function getMatch (path, nodes) {
    * @param {NodeList} nodes
    */
 
-  console.log(path + " in getMatch");
+
 
   if (!(nodes instanceof NodeList)) {
 
@@ -195,11 +193,6 @@ function getMatch (path, nodes) {
       }
     }
   }
-
-  console.log(JSON.stringify({
-          "match": numNodes === numMatching,
-          "percent": (numNodesByPath / numNodes) * 100
-        }));
 
   return {
           "match": numNodesByPath === numNodes && numNodes === numMatching,
@@ -308,7 +301,7 @@ function _optimise (nodes, subPath, optimisedPath) {
 
   isLeafNode = optimisedPath.length === 0;
 
-  console.log("subpath   " + subPath );
+
 
   var subPathElements = document.querySelectorAll(subPath);
 
@@ -405,7 +398,7 @@ function _optimise (nodes, subPath, optimisedPath) {
     return 0;
   });
 
-  console.log("matches: " + JSON.stringify(matches));
+
 
   optimisedPath = matches[0].selector;
 

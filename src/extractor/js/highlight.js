@@ -6,7 +6,10 @@
 
     var $ = require("jquery"),
         xpathUtils = require("./xpathUtils.js"),
-        ipc = require("electron").ipcRenderer;
+        ipc = require("electron").ipcRenderer,
+        cssToXpath = require("css-to-xpath"),
+        selectorLang = "xpath",
+        textNodeTypes = [document.TEXT_NODE, document.ATTRIBUTE_NODE];
 
     var red = "#ea6153";
 
@@ -169,7 +172,7 @@
 
       if ($target.attr("ac-data-clicked")) {
 
-        ipc.sendToHost("cssPath", "");
+        ipc.sendToHost(selectorLang, "");
       } else {
 
         selector = xpathUtils.getElementCSSPath($target.get(0));
@@ -186,7 +189,7 @@
 
         selector = xpathUtils.optimise(selector);
 
-        ipc.sendToHost("cssPath", selector);
+        ipc.sendToHost(selectorLang, cssToXpath(selector));
       }
 
       return false;
@@ -240,7 +243,9 @@
          * @param selectors
          */
 
-         console.log("Start selection");
+        console.log("Start selection");
+
+        var that = this;
 
         if (!selectors || !selectors.length || selectors.length === 0) {
 
@@ -251,7 +256,7 @@
 
           selectors.forEach(function (selector) {
 
-            this.select(selector);
+            that.select(selector);
           });
         });
       },
@@ -266,12 +271,38 @@
         if (!selector)
           return;
 
-        var $elements = $(selector);
+        var elements, currentElement;
 
-        $elements.each(function() {
+        try {
 
-          doSelect($(this));
-        });
+          elements = document.evaluate(selector, document, null,
+                                       XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+        } catch (e) {
+
+          console.log(e);
+          return;
+        }
+
+        console.log("snapshotLength " + elements.snapshotLength);
+
+        for (var i = 0, currentElement; i < elements.snapshotLength; i++) {
+
+          currentElement = elements.snapshotItem(i);
+
+          if (currentElement) {
+
+            if (textNodeTypes.indexOf(currentElement.nodeType) >= 0) {
+
+              console.log(currentElement);
+              currentElement = $(currentElement).parent();
+            } else {
+
+              currentElement = $(currentElement);
+            }
+
+            doSelect(currentElement);
+          }
+        }
       },
       "deSelect": function (selector) {
 
@@ -303,6 +334,37 @@
          */
 
         stopSelection();
+      },
+      "content": function (selector) {
+
+        selector = selector || currentSelector;
+
+        var content = [], currentElement, elements;
+
+        if (selectorLang === "xpath") {
+
+          elements = document.evaluate(selector, document);
+
+          do {
+
+            currentElement = elements.iterateNext();
+
+            if (currentElement) {
+
+              content.push(currentElement.textContent);
+            }
+          } while (currentElement);
+        } else if(selectorLang === "css") {
+
+          $(selector).each(function () {
+
+            content.push($(this).text());
+          });
+        }
+
+        ipc.sendToHost("content", content);
+
+        return content;
       }
     };
 

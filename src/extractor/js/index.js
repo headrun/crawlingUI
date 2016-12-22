@@ -2,6 +2,7 @@ import React    from "react";
 import ReactDOM from "react-dom";
 import Webview from "./Webview.js";
 import styles from "../less/index.less";
+import codeIcon from "../../images/code.svg";
 
 const modes = { "website": "w", "data"   : "d" };
 
@@ -19,11 +20,14 @@ class App extends React.Component {
 
     this.state = {
 
-      "url" : url,
+      "url" : url || "https://pamidi.me",
       "openUrl": url,
       "mode": modes.website,
-      "activePath": ""
+      "activePath": "",
+      "isDevToolsOpen": false
     };
+
+    this.toggleDevTools = this.toggleDevTools.bind(this);
   }
 
   setMode (mode=modes.website) {
@@ -56,13 +60,25 @@ class App extends React.Component {
     return e.keyCode === 13 && this.setOpenUrl(e.target.value);
   }
 
+  toggleDevTools (e) {
+
+    this.setState({
+
+      "isDevToolsOpen": !this.state.isDevToolsOpen
+    });
+  }
+
   render () {
 
     return (
-      <div className={"content" + (this.state.activePath ? " has-footer" : "")}>
+      <div className={"content"
+                      + (this.state.activePath ? " has-footer" : "")
+                      + (this.state.isDevToolsOpen ? " has-dev-tools" : "")
+                     }>
         <header>
           <div className="input-group">
-            <span className="input-group-addon">
+            <span className="input-group-addon toggle-dev-tools"
+                  onClick={this.toggleDevTools}>
               <a href="../index.html">&lt; Back</a>
             </span>
             <input className="form-control"
@@ -75,13 +91,21 @@ class App extends React.Component {
         <div className="browser">
           <Webview url={this.state.openUrl}
                    activePath={this.state.activePath}
-                   setActivePath={this.setActivePath.bind(this)}>
+                   setActivePath={this.setActivePath.bind(this)}
+                   setUrl={(url) => this.setState({url, "openUrl": url})}
+                   showDevTools={this.state.isDevToolsOpen}>
           </Webview>
         </div>
         <footer>
-          <input className="form-control" type="text"
-                 value={this.state.activePath}
-                 onChange={(e) => {this.setActivePath(e.target.value)}}/>
+          <div className="input-group">
+            <div className="input-group-addon"
+                 onClick={this.toggleDevTools}>
+              <img src={codeIcon} />
+            </div>
+            <input className="form-control" type="text"
+                   value={this.state.activePath}
+                   onChange={(e) => {this.setActivePath(e.target.value)}}/>
+          </div>
         </footer>
       </div>
     )
