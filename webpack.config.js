@@ -1,4 +1,5 @@
-var HtmlWebpackPlugin = require("html-webpack-plugin"),
+var path = require("path"),
+    HtmlWebpackPlugin = require("html-webpack-plugin"),
     CopyWebpackPlugin = require('copy-webpack-plugin'),
     webpack = require('webpack');
 
@@ -12,32 +13,43 @@ module.exports = {
     "publicPath": "/",
 		"filename"  : "[name].js"
 	},
-       "module": {
 
-              "loaders": [
+  "externals": {
 
-                     {
-              		"test"   : /\.jsx?$/,
-              		"loader" : "babel-loader",
-              		"query"  : {
+    "fs": "fs",
+    "path": "path"
+  },
 
-              	             "presets": ["es2015", "react"]
-              		}
-              	},
-                     {
-                            "test"  : /\.html$/,
-                            "loader": "html"
-                     },
-              	{
+   "module": {
 
-              		"test"  : /\.(less|css)$/,
-              		"loader": "style-loader!css-loader!less-loader"
-              	},
-              	{
-              		"test"  : /\.(png|jpg|eot|woff2|woff|ttf|svg)$/,
-              		"loader": "url-loader?limit=8192"
-              	}
-              ]
+          "loaders": [
+
+                 {
+          		"test"   : /\.jsx?$/,
+          		"loader" : "babel-loader",
+              "include": [
+
+                path.resolve(__dirname, "src")
+              ],
+          		"query"  : {
+
+          	             "presets": ["es2015", "react"]
+          		}
+          	},
+                 {
+                        "test"  : /\.html$/,
+                        "loader": "html"
+                 },
+          	{
+
+          		"test"  : /\.(less|css)$/,
+          		"loader": "style-loader!css-loader!less-loader"
+          	},
+          	{
+          		"test"  : /\.(png|jpg|eot|woff2|woff|ttf|svg)$/,
+          		"loader": "url-loader?limit=8192"
+          	}
+          ]
        },
        "plugins": [
 

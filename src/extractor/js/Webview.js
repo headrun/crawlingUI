@@ -16,16 +16,17 @@ class Webview extends React.Component {
 
     this.currentUrl = props.url;
 
-    this.__handleGuestMessages = this.__handleGuestMessages.bind(this);
-    this.__handleContentLoaded = this.__handleContentLoaded.bind(this);
-    this.__handleIPCMessage    = this.__handleIPCMessage.bind(this);
-    this.__handleRedirect      = this.__handleRedirect.bind(this);
-    this.__handleNavigation    = this.__handleNavigation.bind(this);
+    this.__handleGuestMessages  = this.__handleGuestMessages.bind(this);
+    this.__handleContentLoaded  = this.__handleContentLoaded.bind(this);
+    this.__handleIPCMessage     = this.__handleIPCMessage.bind(this);
+    this.__handleRedirect       = this.__handleRedirect.bind(this);
+    this.__handleNavigation     = this.__handleNavigation.bind(this);
+    this.__handleDevToolsClosed = this.__handleDevToolsClosed.bind(this);
   }
 
   __handleGuestMessages (e) {
 
-    console.log(`Guest: ${e.sourceId} : ${e.line}\n${e.message}`);
+    console.log(`Guest says: ${e.sourceId} : ${e.line}\n${e.message}`);
   }
 
   __handleContentLoaded () {
@@ -93,6 +94,11 @@ class Webview extends React.Component {
     return this.__setCurrentUrl(e.url);
   }
 
+  __handleDevToolsClosed () {
+
+    this.props.hideDevTools();
+  }
+
   setGuestLoading (isLoading) {
 
     this.setState({
@@ -157,6 +163,8 @@ class Webview extends React.Component {
                              this.__handleRedirect);
     webview.addEventListener("did-navigate",
                              this.__handleNavigation);
+    webview.addEventListener("devtools-closed",
+                             this.__handleDevToolsClosed);
 
     webview.setAttribute("plugins", false);
 
@@ -181,6 +189,8 @@ class Webview extends React.Component {
                                 this.__handleRedirect);
     webview.removeEventListener("did-navigate",
                                 this.__handleNavigation);
+    webview.removeEventListener("devtools-closed",
+                                this.__handleDevToolsClosed);
   }
 
   render () {

@@ -8,8 +8,7 @@
         xpathUtils = require("./xpathUtils.js"),
         ipc = require("electron").ipcRenderer,
         cssToXpath = require("css-to-xpath"),
-        selectorLang = "xpath",
-        textNodeTypes = [document.TEXT_NODE, document.ATTRIBUTE_NODE];
+        selectorLang = "xpath";
 
     var red = "#ea6153";
 
@@ -295,11 +294,13 @@
 
             data.push(currentElement.textContent);
 
-            if (textNodeTypes.indexOf(currentElement.nodeType) >= 0) {
+            if (currentElement.nodeType === document.TEXT_NODE) {
 
-              console.log(currentElement);
               currentElement = $(currentElement).parent();
-            } else {
+            } else if (currentElement.nodeType === document.ATTRIBUTE_NODE) {
+
+              currentElement = $(currentElement.ownerElement);
+            }else {
 
               currentElement = $(currentElement);
             }

@@ -1,13 +1,20 @@
+const fs = require("fs"),
+      path = require("path");
+      
+import config from "../../../config.js";
 import React    from "react";
 import ReactDOM from "react-dom";
 import Webview from "./Webview.js";
 import styles from "../less/index.less";
 import codeIcon from "../../images/code.svg";
 import globe from "../../images/globe.svg";
+import download from "../../images/download.svg";
 
 const modes = { "website": "w", "data"   : "d" };
 
 const newTabData = {"name": "New Column", "selector": ""};
+
+const saveDir = config.crawlersSavePath;
 
 class App extends React.Component {
 
@@ -88,6 +95,19 @@ class App extends React.Component {
     });
   }
 
+  saveConfig () {
+
+    const data = {"startUrls": [this.state.openUrl],
+                  "xpths": []};
+
+    data.xpaths = this.state.tabs.map((tab) => {
+
+                    return {"name": tab.name, "xpath": tab.selector};
+                  });
+
+
+  }
+
   handleNewTab (e) {
 
     e.preventDefault();
@@ -145,42 +165,29 @@ class App extends React.Component {
       return tabname + e.target.value;
     }
 
-    const tabsList = this.state.tabs.map((tab, index) => {
+    function getTab (tab, index) {
 
-                       return (<li key={tab.name + index}
-                                   className={index === this.state.activeTabIndex
-                                                        ? "active"
-                                                        : ""}>
-                                 <a href="#"
-                                    ref={
-                                         (element) => {
-                                           this.tabElements[index] = element;
-                                         }
-                                        }
-                                    onClick={(e) => {
-                                                      e.preventDefault();
-                                                      this.setActiveTab(index);
-                                                    }
-                                            }>
-                                   <span onClick={
-                                                  (e) => {
-                                                    e.target.nextSibling.focus()
-                                                  }
-                                                 }>
-                                     {tab.name}
-                                   </span>
-                                   <input type="text"
-                                          onKeyUp={(e) => {
-                                            this.setTabName(
-                                              tab,
-                                              getTabName(e, tab.name),
-                                              index
-                                            )}
-                                          }
-                                          className="cursor"/>
-                                 </a>
-                               </li>);
-                     });
+      return (
+
+        <li key={tab.name + index}
+            className={index === this.state.activeTabIndex ? "active" : ""}>
+          <a href="#"
+             ref={(element) => { this.tabElements[index] = element; }}
+             onClick={(e) => {e.preventDefault();this.setActiveTab(index);}}>
+            <span onClick={(e) => e.target.nextSibling.focus()}>
+              {tab.name}
+            </span>
+            <input type="text"
+                   className="cursor"
+                   onKeyUp={(e) => {
+                     this.setTabName(tab, getTabName(e, tab.name), index)
+                   }}/>
+          </a>
+        </li>
+      );
+    }
+
+    const tabsList = this.state.tabs.map(getTab.bind(this));
 
     let dataCounter = 0;
 
@@ -212,6 +219,9 @@ class App extends React.Component {
                    value={this.state.url}
                    onChange={(e) => this.setUrl(e.target.value)}
                    onKeyDown={(e) => this.onKeydown(e)}/>
+            <span className="input-group-addon">
+              <img src={download} />
+            </span>
           </div>
         </header>
         <div className="content-body">
@@ -229,7 +239,8 @@ class App extends React.Component {
                      setUrl={(url) => this.setState({url, "openUrl": url})}
                      showDevTools={this.state.isDevToolsOpen}
                      setData={(data) => this.setState({data})}
-                     reloadUrl={this.state.reloadUrl}>
+                     reloadUrl={this.state.reloadUrl}
+                     hideDevTools={() => {this.setState({isDevToolsOpen: false})}}>
             </Webview>
           </div>
         </div>

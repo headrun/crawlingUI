@@ -4,8 +4,16 @@ const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const config = require("./config.js");
+
 const path = require('path')
 const url = require('url')
+const fs  = require('fs')
+
+const crawlersSavePath = config.crawlersSavePath;
+
+if (!fs.existsSync(crawlersSavePath))
+  fs.mkdirSync(crawlersSavePath);
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -25,7 +33,7 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
