@@ -77,18 +77,36 @@ div.content {
       top: 10px;
       left: 0;
 
-      input.cursor, input.cursor:focus {
+      li {
 
-        border: 0;
-        outline: 0;
-        box-shadow: none;
-        display: inline-block;
-        width: 0px;
-      }
+        input.cursor, input.cursor:focus {
 
-      li.active input.cursor {
+          border: 0;
+          outline: 0;
+          box-shadow: none;
+          display: inline-block;
+          width: 0px;
+        }
 
-        width: 2px;
+        span.close {
+
+          display: none;
+          margin-left: 10px;
+          .text-danger;
+        }
+
+        &.active {
+
+          input.cursor {
+
+            width: 2px;
+          }
+
+          span.close {
+
+            display: inline-block;
+          }
+        }
       }
     }
 

@@ -1,6 +1,6 @@
 const fs = require("fs"),
       path = require("path");
-      
+
 import config from "../../../config.js";
 import React    from "react";
 import ReactDOM from "react-dom";
@@ -14,7 +14,7 @@ const modes = { "website": "w", "data"   : "d" };
 
 const newTabData = {"name": "New Column", "selector": ""};
 
-const saveDir = config.crawlersSavePath;
+const saveDir = "./crawlers";
 
 class App extends React.Component {
 
@@ -46,6 +46,7 @@ class App extends React.Component {
     this.tabElements = {}; //Tab elements dom refereces
     this.toggleDevTools = this.toggleDevTools.bind(this);
     this.handleNewTab = this.handleNewTab.bind(this);
+    this.handleSave = this.handleSave.bind(this);
   }
 
   setMode (mode=modes.website) {
@@ -84,6 +85,12 @@ class App extends React.Component {
     this.setState({activeTabIndex, activePath});
   }
 
+  removeTab (index) {
+
+    this.state.tabs.splice(index, 1);
+    this.setState({"tabs": this.state.tabs});
+  }
+
   setTabName (tab, name, index) {
 
     tab.name = name;
@@ -97,15 +104,24 @@ class App extends React.Component {
 
   saveConfig () {
 
-    const data = {"startUrls": [this.state.openUrl],
-                  "xpths": []};
+    const data = {"startUrls": [this.state.openUrl]};
 
     data.xpaths = this.state.tabs.map((tab) => {
 
                     return {"name": tab.name, "xpath": tab.selector};
                   });
 
+    const fileName = path.join(saveDir, `crawler__${(new Date()).getTime()}.json`);
 
+    fs.writeFileSync(fileName, JSON.stringify(data, null, 4));
+
+    return fileName;
+  }
+
+  handleSave (e) {
+
+    var fileName = this.saveConfig();
+    window.alert(`Crawler save to ${fileName}`);
   }
 
   handleNewTab (e) {
@@ -122,6 +138,16 @@ class App extends React.Component {
       this.setActiveTab(newTabIndex);
       this.tabElements[newTabIndex].focus();
     });
+  }
+
+  handleCloseTab (e, index) {
+
+    if (index < 0 || index > this.state.tabs.length - 1) {
+
+      return;
+    }
+
+    return window.confirm("Are you sure?") && this.removeTab(index);
   }
 
   onKeydown (e) {
@@ -182,6 +208,8 @@ class App extends React.Component {
                    onKeyUp={(e) => {
                      this.setTabName(tab, getTabName(e, tab.name), index)
                    }}/>
+            <span className="close text-danger"
+                  onClick={(e) => this.handleCloseTab(e, index)}>&times;</span>
           </a>
         </li>
       );
@@ -219,7 +247,8 @@ class App extends React.Component {
                    value={this.state.url}
                    onChange={(e) => this.setUrl(e.target.value)}
                    onKeyDown={(e) => this.onKeydown(e)}/>
-            <span className="input-group-addon">
+            <span className="input-group-addon"
+                  onClick={this.handleSave}>
               <img src={download} />
             </span>
           </div>

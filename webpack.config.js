@@ -1,10 +1,12 @@
 var path = require("path"),
     HtmlWebpackPlugin = require("html-webpack-plugin"),
     CopyWebpackPlugin = require('copy-webpack-plugin'),
-    webpack = require('webpack');
+    webpack = require('webpack'),
+    webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
 
-module.exports = {
+var options = {
 
+  "target": "electron",
 	"entry" : {"index"    : "./src/js/index.js",
              "extractor/index": "./src/extractor/js/index.js"},
 	"output": {
@@ -13,14 +15,7 @@ module.exports = {
     "publicPath": "/",
 		"filename"  : "[name].js"
 	},
-
-  "externals": {
-
-    "fs": "fs",
-    "path": "path"
-  },
-
-   "module": {
+  "module": {
 
           "loaders": [
 
@@ -76,4 +71,8 @@ module.exports = {
                  "to"  : "extractor/xpathUtils.js"}
               ])
        ]
-}
+};
+
+options.target = webpackTargetElectronRenderer(options);
+
+module.exports = options;
