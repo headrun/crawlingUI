@@ -424,7 +424,7 @@ function cssToXPath(rule)
 
         // Trim leading whitespace
         rule = rule.trim();
-        
+
         if (!rule.length)
             break;
 
@@ -510,6 +510,8 @@ function optimise (path) {
 
   if (!path)
     return "";
+
+  console.log("The full path is : " + path);
 
   nodes = document.querySelectorAll(path);
 

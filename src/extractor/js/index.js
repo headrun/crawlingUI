@@ -74,6 +74,8 @@ class App extends React.Component {
 
     tabs[this.state.activeTabIndex].selector = activePath;
 
+    console.log("Active path ", activePath);
+
     this.setState({activePath, tabs});
   }
 

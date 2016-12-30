@@ -12,8 +12,8 @@ const fs  = require('fs')
 
 const crawlersSavePath = config.crawlersSavePath;
 
-if (!fs.existsSync(crawlersSavePath))
-  fs.mkdirSync(crawlersSavePath);
+//if (!fs.existsSync(crawlersSavePath))
+  //fs.mkdirSync(crawlersSavePath);
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -27,7 +27,7 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'build/extractor/index.html'),
+    pathname: path.join(__dirname, 'compiled/extractor/index.html'),
     protocol: 'file:',
     slashes: true
   }))

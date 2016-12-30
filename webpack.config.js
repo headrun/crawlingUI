@@ -11,7 +11,7 @@ var options = {
              "extractor/index": "./src/extractor/js/index.js"},
 	"output": {
 
-		"path"      : "./build",
+		"path"      : "./compiled",
     "publicPath": "/",
 		"filename"  : "[name].js"
 	},

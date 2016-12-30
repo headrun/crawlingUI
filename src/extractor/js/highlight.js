@@ -186,7 +186,7 @@
 
         currentSelector = selector;
 
-        selector = xpathUtils.optimise(selector);
+        //selector = xpathUtils.optimise(selector);
 
         ipc.sendToHost(selectorLang, cssToXpath(selector));
       }
