@@ -290,121 +290,6 @@ function getAttributesSelector (nodes) {
   return selector;
 }
 
-function _optimise (nodes, subPath, optimisedPath) {
-
-  if (!subPath) {
-
-    return optimisedPath;
-  }
-
-  var currentPath = optimisedPath = optimisedPath || "";
-
-  isLeafNode = optimisedPath.length === 0;
-
-
-
-  var subPathElements = document.querySelectorAll(subPath);
-
-  subPath = subPath.split(" > ");
-
-  var positionSelector = subPath.pop(),
-      nodeName = positionSelector.match(/^[^\:$]+/)[0];
-
-  subPath = subPath.join(" > ");
-
-  var matches = [], match;
-
-  currentPath = nodeName + (!isLeafNode ? " " + optimisedPath
-                                        : "");
-
-  match = getMatch(currentPath, nodes);
-
-  if (match.match) {
-
-    return currentPath;
-  }
-
-  matches.push({"selector": currentPath, "matchPercent": match.percent});
-
-  var attributesSelector = getAttributesSelector(subPathElements);
-
-  currentPath = nodeName + attributesSelector + (!isLeafNode ? " " + optimisedPath
-                                                             : "");
-
-  match = getMatch(currentPath, nodes);
-
-  if (match.match) {
-
-    return currentPath;
-  }
-
-  matches.push({"selector": currentPath, "matchPercent": match.percent});
-
-  if (!isLeafNode) {
-
-    currentPath = nodeName + attributesSelector + " > " + optimisedPath;
-
-    match = getMatch(currentPath, nodes);
-
-    if (match.match) {
-
-      return currentPath;
-    }
-
-    matches.push({"selector": currentPath, "matchPercent": match.percent});
-  }
-
-  if (positionSelector !== nodeName) {
-
-    var currentPath = positionSelector + (!isLeafNode ? " " + optimisedPath
-                                                        : "");
-
-    match = getMatch(currentPath, nodes);
-
-    if (match.match) {
-
-      return currentPath;
-    }
-
-    matches.push({"selector": currentPath, "matchPercent": match.percent});
-
-    if (!isLeafNode) {
-
-      currentPath = positionSelector + " > " + optimisedPath;
-
-      match = getMatch(currentPath, nodes);
-
-      if (match.match) {
-
-        return currentPath;
-      }
-
-      matches.push({"selector": currentPath, "matchPercent": match.percent});
-    }
-  }
-
-  matches.sort(function (match1, match2) {
-
-    if (match1.matchPercent > match2.matchPercent) {
-
-      return 1;
-    }
-
-    if (match1.matchPercent < match2.matchPercent) {
-
-      return -1;
-    }
-
-    return 0;
-  });
-
-
-
-  optimisedPath = matches[0].selector;
-
-  return _optimise(nodes, subPath, optimisedPath);
-}
-
 function cssToXPath(rule)
 {
     var regElement = /^([#.]?)([a-z0-9\\*_-]*)((\|)([a-z0-9\\*_-]*))?/i;
@@ -506,22 +391,9 @@ function cssToXPath(rule)
     return xpath;
 };
 
-function optimise (path) {
-
-  if (!path)
-    return "";
-
-  console.log("The full path is : " + path);
-
-  nodes = document.querySelectorAll(path);
-
-  return _optimise(nodes, path);
-}
-
 module.exports = {
 
   getElementCSSPath: getElementCSSPath,
   getCommonCSSPath : getCommonCSSPath,
-  cssToXPath       : cssToXPath,
-  optimise         : optimise
+  cssToXPath       : cssToXPath
 };

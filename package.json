@@ -7,7 +7,7 @@
     "start": "electron .",
     "postinstall": "webpack --config webpack.config.js",
     "pack": "build --dir",
-    "dist": "electron-packager ./compiled cui --all"
+    "dist": "build -mwl"
   },
   "env": "development",
   "build": {
@@ -18,7 +18,11 @@
       "node_modules/**/*.*"
     ],
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "target"  : "dmg"
+    },
+    "win": {
+      "iconUrl": "https://pamidi.me/favicon.ico"
     }
   },
   "repository": {

@@ -32,7 +32,7 @@ class App extends React.Component {
 
     this.state = {
 
-      "url"           : url || "https://pamidi.me",
+      "url"           : url,
       "openUrl"       : url,
       "mode"          : modes.website,
       "activePath"    : "",
@@ -59,13 +59,6 @@ class App extends React.Component {
     url = url.trim();
 
     this.setState({url});
-  }
-
-  setOpenUrl (openUrl="") {
-
-    openUrl = openUrl.trim();
-
-    this.setState({openUrl});
   }
 
   setActivePath (activePath="") {
@@ -164,12 +157,19 @@ class App extends React.Component {
                             () => this.setState({reloadUrl: false}));
     }
 
+    var openUrl = e.target.value;
+
+    if (openUrl.indexOf("http") !== 0) {
+
+      openUrl = "http://" + openUrl;
+    }
+
     this.setState({
 
       activePath: "",
       activeTabIndex: 0,
       tabs: [Object.assign({}, newTabData)],
-      openUrl: e.target.value
+      openUrl
     });
   }
 
