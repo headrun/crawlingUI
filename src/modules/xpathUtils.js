@@ -158,13 +158,136 @@ function getCommonCSSPath (paths) {
   return hasCommonPath ? currentCommonPath : null;
 }
 
+var attributesWhitelist = ["id", "itemprop", "name", /^data.*$/,
+                           "for", "disabled", "type", "colspan",
+                           "rowspan", "rel", "required"]
+    attributesWhitelistPrority = {};
+
+
+attributesWhitelist.forEach(function (attribute, index) {
+
+  attributesWhitelistPrority[attribute] = index;
+});
+
+function getAttributesSelectors (nodes) {
+
+  var commonArributesHash = {},
+      allAttributes = nodes.item(0).attributes;
+
+  if (allAttributes.length === 0) {
+
+    return [];
+  }
+
+  for (var i = 0, name, value; i < allAttributes.length; i++) {
+
+    name = allAttributes[i].name.toLowerCase();
+    value = allAttributes[i].value;
+
+    if (attributesWhitelist.indexOf(name) < 0) {
+
+      continue;
+    }
+
+    commonArributesHash[name] = value;
+  }
+
+  var commonArributesList = Object.keys(commonArributesHash);
+
+  for (var i=0, node; i < nodes.length; i++) {
+
+    node = nodes[i];
+
+    for (var j = 0, attrName, attrValue; j < commonArributesList.length; j++) {
+
+      attrName = commonArributesList[j];
+      attrValue = commonArributesHash[attrName];
+
+      var nodeAttrValue, removeAttribute;
+
+      if (!node.hasAttribute(attrName)) {
+
+        removeAttribute = true;
+      } else {
+
+        nodeAttrValue = node.getAttribute(attrName);
+        removeAttribute = attrValue !== nodeAttrValue;
+      }
+
+      if (removeAttribute) {
+
+        delete commonArributesHash[attrName];
+      } else {
+
+        commonArributesHash[attrName] = attrValue;
+      }
+    }
+
+    commonArributesList = Object.keys(commonArributesHash);
+  }
+
+  commonArributesList.sort(function (attr1, attr2) {
+
+    var attr1Prio = attributesWhitelistPrority[attr1],
+        attr2Prio = attributesWhitelistPrority[attr2];
+
+    if (attr1Prio > attr2Prio) {
+
+      return 1;
+    }
+
+    if (attr1Prio < attr2Prio) {
+
+      return -1;
+    }
+
+    return 0;
+  });
+
+  return commonArributesList.map(function (attributeName) {
+
+    return "["+ attributeName +"=\""
+              + commonArributesHash[attributeName].replace("\"", "\\\"") + "\"]";
+  });
+}
+
+function getClassArray (className) {
+
+  return className.trim() ?
+         className.trim().split(/\s+/) :
+         [];
+}
+
+function getClassSelectors (nodes) {
+
+  if (!Array.isArray(nodes) || nodes.length === 0)  {
+
+    return [];
+  }
+
+  var node = nodes.shift(),
+      existingClasses = getClassArray(node.className);
+
+  nodes.forEach(function (node) {
+
+    var classes = getClassArray(node.className);
+
+    existingClasses = _.intersection(existingClasses, classes);
+  });
+
+  return existingClasses.map(function (className) {
+
+    return "." + className;
+  });
+}
+
 function getMatch (path, nodes) {
 
   /**
    * Give a patha and NodeList, returns if both sets match
    *
-   * @param {string} path
-   * @param {NodeList} nodes
+   * @param {String} path
+   * @param {Array} nodes
    */
 
 
@@ -200,200 +323,62 @@ function getMatch (path, nodes) {
          };
 }
 
-var attributesWhitelist = ["class", "name", "id", "itemprop"];
+function getBestMatch (nodeName, nodes, getSelectors) {
 
-function getAttributesSelector (nodes) {
+  var selectors = getSelectors(nodes),
+      selectorsPrio = {};
 
-  var commonArributesHash = {},
-      allAttributes = nodes.item(0).attributes,
-      selector = "";
+  selectors.forEach(function (selector, index) {
 
-  if (allAttributes.length === 0) {
+    selectorsPrio[selector] = index;
+  });
+
+  selector.forEach(function () {
+
+
+  });
+}
+
+var targetElements;
+
+function optimise (currentElements, optimisedPath, fullPath) {
+
+  var areLeafNodes = optimisedPath.length === 0,
+      currentPath;
+
+  var fullPathArray = fullPath.split(" > ");
+
+  var positionSelector = fullPathArray.pop(),
+      nodeNameSelector = positionSelector.match(/^[^\:$]+/)[0];
+
+  fullPath = fullPathArray.join(" > ");
+
+  var matches = [], match, currentMatchPriority = {};
+
+  currentMatchPriority[nodeNameSelector] = 1;
+
+  match = getMatch(currentPath, currentElements);
+}
+
+function optimiseCSSPath (cssPath) {
+
+  if (!cssPath) {
 
     return "";
   }
 
-  for (var i = 0, name, value;i < allAttributes.length; i++) {
+  targetElements = [];
 
-    name = allAttributes[i].name.toLowerCase();
-    value = allAttributes[i].value;
+  document.querySelectorAll(cssPath).forEach(function (node) {
 
-    if (attributesWhitelist.indexOf(name) < 0) {
+    targetElements.push(node);
+  });
 
-      continue;
-    }
-
-    if (name === "class" && value.trim()) {
-
-      commonArributesHash[name] = value.trim().split(/\s+/);
-    } else {
-
-      commonArributesHash[name] = value;
-    }
-  }
-
-  var commonArributesList = Object.keys(commonArributesHash);
-
-  for (var i=0, node; i < nodes.length; i++) {
-
-    node = nodes[i];
-
-    for (var j = 0, attrName, attrValue; j < commonArributesList.length; j++) {
-
-      attrName = commonArributesList[j];
-      attrValue = commonArributesHash[attrName];
-
-      var nodeAttrValue, removeAttribute;
-
-      if (!node.hasAttribute(attrName)) {
-
-        removeAttribute = true;
-      } else {
-
-        nodeAttrValue = node.getAttribute(attrName);
-
-        if (attrName === "class") {
-
-          attrValue = _.intersection(attrValue, nodeAttrValue.split(/\s+/));
-
-          removeAttribute = attrValue.length === 0;
-        } else {
-
-          removeAttribute = attrValue !== nodeAttrValue;
-        }
-      }
-
-      if (removeAttribute) {
-
-        delete commonArributesHash[attrName];
-      } else {
-
-        commonArributesHash[attrName] = attrValue;
-      }
-
-      commonArributesList = Object.keys(commonArributesHash);
-    }
-  }
-
-  for (var attributeName in commonArributesHash) {
-
-    if (attributeName === "class") {
-
-      selector += "." + commonArributesHash[attributeName].join(".");
-    } else {
-
-      selector += "["+ attributeName +"=\""
-                  + commonArributesHash[attributeName] + "\"]";
-    }
-  }
-
-  return selector;
+  return optimise(targetElements, "", cssPath);
 }
-
-function cssToXPath(rule)
-{
-    var regElement = /^([#.]?)([a-z0-9\\*_-]*)((\|)([a-z0-9\\*_-]*))?/i;
-    var regAttr1 = /^\[([^\]]*)\]/i;
-    var regAttr2 = /^\[\s*([^~=\s]+)\s*(~?=)\s*"([^"]+)"\s*\]/i;
-    var regPseudo = /^:([a-z_-])+/i;
-    var regCombinator = /^(\s*[>+\s])?/i;
-    var regComma = /^\s*,/i;
-
-    var index = 1;
-    var parts = ["//", "*"];
-    var lastRule = null;
-
-    while (rule.length && rule != lastRule)
-    {
-        lastRule = rule;
-
-        // Trim leading whitespace
-        rule = rule.trim();
-
-        if (!rule.length)
-            break;
-
-        // Match the element identifier
-        var m = regElement.exec(rule);
-        if (m)
-        {
-            if (!m[1])
-            {
-                // XXXjoe Namespace ignored for now
-                if (m[5])
-                    parts[index] = m[5];
-                else
-                    parts[index] = m[2];
-            }
-            else if (m[1] == '#')
-                parts.push("[@id='" + m[2] + "']");
-            else if (m[1] == '.')
-                parts.push("[contains(concat(' ',normalize-space(@class),' '), ' " + m[2] + " ')]");
-
-            rule = rule.substr(m[0].length);
-        }
-
-        // Match attribute selectors
-        m = regAttr2.exec(rule);
-        if (m)
-        {
-            if (m[2] == "~=")
-                parts.push("[contains(@" + m[1] + ", '" + m[3] + "')]");
-            else
-                parts.push("[@" + m[1] + "='" + m[3] + "']");
-
-            rule = rule.substr(m[0].length);
-        }
-        else
-        {
-            m = regAttr1.exec(rule);
-            if (m)
-            {
-                parts.push("[@" + m[1] + "]");
-                rule = rule.substr(m[0].length);
-            }
-        }
-
-        // Skip over pseudo-classes and pseudo-elements, which are of no use to us
-        m = regPseudo.exec(rule);
-        while (m)
-        {
-            rule = rule.substr(m[0].length);
-            m = regPseudo.exec(rule);
-        }
-
-        // Match combinators
-        m = regCombinator.exec(rule);
-        if (m && m[0].length)
-        {
-            if (m[0].indexOf(">") != -1)
-                parts.push("/");
-            else if (m[0].indexOf("+") != -1)
-                parts.push("/following-sibling::");
-            else
-                parts.push("//");
-
-            index = parts.length;
-            parts.push("*");
-            rule = rule.substr(m[0].length);
-        }
-
-        m = regComma.exec(rule);
-        if (m)
-        {
-            parts.push(" | ", "//", "*");
-            index = parts.length-1;
-            rule = rule.substr(m[0].length);
-        }
-    }
-
-    var xpath = parts.join("");
-    return xpath;
-};
 
 module.exports = {
 
   getElementCSSPath: getElementCSSPath,
-  getCommonCSSPath : getCommonCSSPath,
-  cssToXPath       : cssToXPath
+  getCommonCSSPath : getCommonCSSPath
 };
