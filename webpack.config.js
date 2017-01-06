@@ -67,8 +67,8 @@ var options = {
 
                 {"from": "./src/extractor/js/highlight.js",
                  "to"  : "extractor/highlight.js"},
-                {"from": "./src/modules/xpathUtils.js",
-                 "to"  : "extractor/xpathUtils.js"}
+                {"from": "./src/modules/*.js",
+                 "to"  : "extractor/[name].js"}
               ])
        ]
 };

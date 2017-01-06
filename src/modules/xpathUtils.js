@@ -1,4 +1,5 @@
-var _ = require("underscore");
+var _ = require("underscore"),
+    utils = require("./utils.js");
 
 function areSiblingElements (ele1, ele2) {
 
@@ -287,7 +288,7 @@ function getMatch (path, nodes) {
    * Give a patha and NodeList, returns if both sets match
    *
    * @param {String} path
-   * @param {Array} nodes
+   * @param {NodeList} nodes
    */
 
 
@@ -328,20 +329,83 @@ function getBestMatch (nodeName, nodes, getSelectors) {
   var selectors = getSelectors(nodes),
       selectorsPrio = {};
 
+  var selectorCombinations = [];
+
   selectors.forEach(function (selector, index) {
 
     selectorsPrio[selector] = index;
   });
 
-  selector.forEach(function () {
+  selectors = utils.subsets(selectors).sort(function (sel1Group, sel2Group) {
 
+                var sel1Prio = sel1Group.reduce(function (sel1, sel2) {
 
+                                 return selectorsPrio[sel1] + selectorsPrio[sel2];
+                               }, 0),
+                    sel2Prio = sel2Group.reduce(function (sel1, sel2) {
+
+                                 return selectorsPrio[sel1] + selectorsPrio[sel2];
+                               }, 0);
+
+                if (sel1Prio < sel2Prio) {
+
+                  return -1;
+                }
+
+                if (sel1Prio > sel2Prio) {
+
+                  return 1;
+                }
+
+                return 0;
+              }).map(function (selGroup) {
+
+                return nodeName + selGroup.join("");
+              });
+
+  selectorsPrio = {};
+
+  selectors.forEach(function (selector, index) {
+
+    selectorsPrio[selector] = index;
   });
+
+  var matches = selectors.map(function (selector) {
+
+                  return getMatch(selector, nodes);
+                }).sort(function (match1, match2) {
+
+                  return match1.percent - match2.percent;
+                });
+
+  var lowestMatchPercent = matches[0].percent;
+
+  for (var i = 1; i < matches.length; i++) {
+
+    if (matches[i] > lowestMatchPercent) {
+
+      matches = matches.slice(0, i);
+      break;
+    }
+  }
+
+  matches.sort(function (match1, match2) {
+
+    var match1Prio = selectorsPrio[match1.selector],
+        match2Prio = selectorsPrio[match2.selector];
+
+    return match1Prio - match2Prio;
+  });
+
+  return matches[0];
 }
 
-var targetElements;
-
 function optimise (currentElements, optimisedPath, fullPath) {
+
+  if (fullPath.length === 0) {
+
+    return;
+  }
 
   var areLeafNodes = optimisedPath.length === 0,
       currentPath;
@@ -357,7 +421,18 @@ function optimise (currentElements, optimisedPath, fullPath) {
 
   currentMatchPriority[nodeNameSelector] = 1;
 
-  match = getMatch(currentPath, currentElements);
+  var x = getBestMatch(nodeNameSelector, currentElements,
+                       getAttributesSelectors);
+  console.log(x);
+
+  currentElements = currentElements.map(function (ele) {
+
+                      return ele.parent;
+                    });
+
+  optimisedPath += (areLeafNodes ? "" : " ") + x.selector;
+
+  return optimise(currentElements, optimisedPath, fullPath);
 }
 
 function optimiseCSSPath (cssPath) {
@@ -367,12 +442,7 @@ function optimiseCSSPath (cssPath) {
     return "";
   }
 
-  targetElements = [];
-
-  document.querySelectorAll(cssPath).forEach(function (node) {
-
-    targetElements.push(node);
-  });
+  var targetElements = document.querySelectorAll(cssPath);
 
   return optimise(targetElements, "", cssPath);
 }
@@ -380,5 +450,6 @@ function optimiseCSSPath (cssPath) {
 module.exports = {
 
   getElementCSSPath: getElementCSSPath,
-  getCommonCSSPath : getCommonCSSPath
+  getCommonCSSPath : getCommonCSSPath,
+  optimise: optimiseCSSPath
 };
