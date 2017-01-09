@@ -26,7 +26,7 @@ class Webview extends React.Component {
 
   __handleGuestMessages (e) {
 
-    console.log(`Guest : ${e.sourceId} : ${e.line}\n${e.message}`);
+    console.log(`Guest saty: ${e.sourceId} : ${e.line}\n${e.message}`);
   }
 
   __handleContentLoaded () {

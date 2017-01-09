@@ -173,7 +173,7 @@ attributesWhitelist.forEach(function (attribute, index) {
 function getAttributesSelectors (nodes) {
 
   var commonArributesHash = {},
-      allAttributes = nodes.item(0).attributes;
+      allAttributes = nodes[0].attributes;
 
   if (allAttributes.length === 0) {
 
@@ -266,8 +266,10 @@ function getClassSelectors (nodes) {
     return [];
   }
 
-  var node = nodes.shift(),
+  var node = nodes[0],
       existingClasses = getClassArray(node.className);
+
+  nodes = nodes.slice(1);
 
   nodes.forEach(function (node) {
 
@@ -288,15 +290,8 @@ function getMatch (path, nodes) {
    * Give a patha and NodeList, returns if both sets match
    *
    * @param {String} path
-   * @param {NodeList} nodes
+   * @param {Array} nodes
    */
-
-
-
-  if (!(nodes instanceof NodeList)) {
-
-    throw new Error("Expected NodeList, got " + typeof nodes);
-  }
 
   var nodesByPath    = document.querySelectorAll(path),
       numNodes       = nodes.length,
@@ -306,7 +301,7 @@ function getMatch (path, nodes) {
 
   for (var i = 0, currentNode; i < numNodes; i++) {
 
-    currentNode = nodes.item(i);
+    currentNode = nodes[i];
 
     for (var j = 0, currentPathNode; j < numNodesByPath; j++) {
 
@@ -320,7 +315,8 @@ function getMatch (path, nodes) {
 
   return {
           "match": numNodesByPath === numNodes && numNodes === numMatching,
-          "percent": (numNodesByPath / numNodes) * 100
+          "percent": (numNodesByPath / numNodes) * 100,
+          "selector": path
          };
 }
 
@@ -328,6 +324,11 @@ function getBestMatch (nodeName, nodes, getSelectors) {
 
   var selectors = getSelectors(nodes),
       selectorsPrio = {};
+
+  if (selectors.length === 0) {
+
+    return;
+  }
 
   var selectorCombinations = [];
 
@@ -400,9 +401,9 @@ function getBestMatch (nodeName, nodes, getSelectors) {
   return matches[0];
 }
 
-function optimise (currentElements, optimisedPath, fullPath) {
+function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevElements) {
 
-  if (fullPath.length === 0) {
+  if (fullPath.length === 0 || currentElements.length === 0) {
 
     return;
   }
@@ -413,6 +414,7 @@ function optimise (currentElements, optimisedPath, fullPath) {
   var fullPathArray = fullPath.split(" > ");
 
   var positionSelector = fullPathArray.pop(),
+      position = (positionSelector.match(/\((\d+)\)/) || [])[1],
       nodeNameSelector = positionSelector.match(/^[^\:$]+/)[0];
 
   fullPath = fullPathArray.join(" > ");
@@ -421,18 +423,100 @@ function optimise (currentElements, optimisedPath, fullPath) {
 
   currentMatchPriority[nodeNameSelector] = 1;
 
-  var x = getBestMatch(nodeNameSelector, currentElements,
-                       getAttributesSelectors);
-  console.log(x);
+  var selector = nodeNameSelector,
+      selectors = [],
+      selectorsPrio = {},
+      attributesSelector = getBestMatch(nodeNameSelector, currentElements,
+                                        getAttributesSelectors);
+
+  if (attributesSelector) {
+
+    selectors.push(attributesSelector.selector);
+  }
+
+  var classSelector = getBestMatch(nodeNameSelector, currentElements,
+                                   getClassSelectors);
+
+  if (classSelector) {
+
+    selectors.push(classSelector.selector);
+  }
+
+  if (position) {
+
+    if (attributesSelector) {
+
+      selectors.push(attributesSelector.selector + ":nth-of-type("
+                     + position + ")");
+    }
+
+    if (classSelector) {
+
+      selectors.push(classSelector.selector + ":nth-of-type("
+                     + position + ")");
+    }
+  }
+
+  var selectorMatches = selectors.map(function (selector) {
+
+                          return getMatch(selector, currentElements);
+                        }).sort(function (sel1, sel2) {
+
+                          return sel1.percent - sel2.percent;
+                        }),
+      minSelectorPercent = selectorMatches[0].percent;
+
+  for (var i = 1; i < selectorMatches.length; i++) {
+
+    if (minSelectorPercent !== selectorMatches[i].percent)
+      break;
+  }
+
+  selectorMatches = selectorMatches.slice(0, i)
+                    .sort(function (match1, match2) {
+
+                      var match1Prio = selectors.indexOf(match1.selector),
+                          match2Prio = selectors.indexOf(match2.selector);
+
+                      return match1Prio - match2Prio;
+                    });
+
+  selector = selectorMatches[0];
+
+  var fullMatch = selector.match;
+
+  selector = selector.selector
+
+  var useChildrenSlector = false;
+
+  if (!areLeafNodes && !fullMatch) {
+
+    var descendantMatch = getMatch(selector + " " + prevSelector, prevElements),
+        childrenMatch   = getMatch(selector + " > " + prevSelector, prevElements);
+
+    useChildrenSlector = childrenMatch.percent < descendantMatch.percent;
+  }
+
+  var prevElements = currentElements;
 
   currentElements = currentElements.map(function (ele) {
 
-                      return ele.parent;
+                      return ele.parentNode;
                     });
 
-  optimisedPath += (areLeafNodes ? "" : " ") + x.selector;
+  optimisedPath = selector + (areLeafNodes ? ""
+                                           : useChildrenSlector ? " > "
+                                                                : " ")
+                           + optimisedPath;
 
-  return optimise(currentElements, optimisedPath, fullPath);
+  console.log("Optimised Path", optimisedPath);
+
+  if (fullMatch) {
+
+    return optimisedPath;
+  }
+
+  return optimise(currentElements, optimisedPath, fullPath, selector, prevElements);
 }
 
 function optimiseCSSPath (cssPath) {
@@ -442,7 +526,12 @@ function optimiseCSSPath (cssPath) {
     return "";
   }
 
-  var targetElements = document.querySelectorAll(cssPath);
+  var targetElements = [];
+
+  document.querySelectorAll(cssPath).forEach(function (element) {
+
+    targetElements.push(element);
+  });
 
   return optimise(targetElements, "", cssPath);
 }
