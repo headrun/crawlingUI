@@ -457,6 +457,11 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
     }
   }
 
+  if (selectors.length === 0) {
+
+    selectors.push(nodeNameSelector);
+  }
+
   var selectorMatches = selectors.map(function (selector) {
 
                           return getMatch(selector, currentElements);
