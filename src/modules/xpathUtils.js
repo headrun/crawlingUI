@@ -39,6 +39,10 @@ function areSiblingElements (ele1, ele2) {
   return areSiblings;
 }
 
+function hasSimilarSiblings () {
+
+}
+
 function getSiblingIndex (element) {
 
   var index = 1;
@@ -254,9 +258,14 @@ function getAttributesSelectors (nodes) {
 
 function getClassArray (className) {
 
-  return className.trim() ?
-         className.trim().split(/\s+/) :
-         [];
+  var classNames = className.trim()
+                     ? className.trim().split(/\s+/)
+                     : [];
+
+  return classNames.filter(function (className) {
+
+    return (/^-?[_a-zA-Z]+[_a-zA-Z0-9-]*$/).test(className);
+  });
 }
 
 function getClassSelectors (nodes) {
@@ -442,6 +451,8 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
     selectors.push(classSelector.selector);
   }
 
+  selectors.push(nodeNameSelector);
+
   if (position) {
 
     if (attributesSelector) {
@@ -455,11 +466,8 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
       selectors.push(classSelector.selector + ":nth-of-type("
                      + position + ")");
     }
-  }
 
-  if (selectors.length === 0) {
-
-    selectors.push(nodeNameSelector);
+    selectors.push(nodeNameSelector + ":nth-of-type("+ position +")");
   }
 
   var selectorMatches = selectors.map(function (selector) {
@@ -508,6 +516,8 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
                       return ele.parentNode;
                     });
+
+  currentElements = _.uniq(currentElements);
 
   optimisedPath = selector + (areLeafNodes ? ""
                                            : useChildrenSlector ? " > "
