@@ -39,25 +39,91 @@ function areSiblingElements (ele1, ele2) {
   return areSiblings;
 }
 
-function hasSimilarSiblings () {
+function getPrevSiblings (node, ofSameName) {
 
+  var sibling,
+      siblings = [],
+      nodeName = node.nodeName.toLowerCase();
+
+  if (nodeName === Node.DOCUMENT_TYPE_NODE) {
+
+    return siblings;
+  }
+
+  for (sibling = node.previousSibling; sibling; sibling = sibling.previousSibling)
+  {
+
+    if (ofSameName && nodeName !== sibling.nodeName.toLowerCase()) {
+
+      continue;
+    }
+
+    siblings.push(sibling);
+  }
+
+  return siblings;
+}
+
+function getNextSiblings (node, ofSameName) {
+
+  var sibling,
+      siblings = [],
+      nodeName = node.nodeName.toLowerCase();
+
+  if (nodeName === Node.DOCUMENT_TYPE_NODE) {
+
+    return siblings;
+  }
+
+  for (sibling = node.nextSibling; sibling; sibling = sibling.nextSibling)
+  {
+
+    if (ofSameName && nodeName !== sibling.nodeName.toLowerCase()) {
+
+      continue;
+    }
+
+    siblings.push(sibling);
+  }
+
+  return siblings;
+}
+
+function getSiblings (node, ofSameName) {
+
+  var sibling, siblings = [];
+
+  siblings = siblings.concat(getPrevSiblings(node, ofSameName))
+                     .concat(getNextSiblings(node, ofSameName));
+
+  return siblings;
+}
+
+function hasSimilarSiblings (node, selector) {
+
+  var siblings = getSiblings(node),
+      _hasSimilarSibling = false;
+
+  for (var index = 0; index < siblings.length; index++) {
+
+    _hasSimilarSibling = siblings[index].match(selector);
+
+    if (_hasSimilarSibling) {
+
+      break;
+    }
+  }
+
+  return _hasSimilarSibling;
 }
 
 function getSiblingIndex (element) {
 
   var index = 1;
 
-  for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling)
-  {
-      // Ignore document type declaration.
-      if (sibling.nodeType == Node.DOCUMENT_TYPE_NODE)
-          continue;
+  var prevSiblings = getPrevSiblings(element, true);
 
-      if (sibling.nodeName == element.nodeName)
-          ++index;
-  }
-
-  return index;
+  return prevSiblings.length + 1;
 }
 
 function getElementCSSSelector (element) {
@@ -67,17 +133,31 @@ function getElementCSSSelector (element) {
 
     var label = element.localName.toLowerCase();
 
-    var hasSibling   = element.previousSibling || element.nextSibling,
-        siblingIndex = getSiblingIndex(element);
-
     if (label === "html" || label === "body") {
 
       return label;
     }
 
-    label = label + (hasSibling
-                     ? ":nth-of-type(" + siblingIndex + ")"
-                     : "");
+    var hasSibling   = element.previousSibling || element.nextSibling,
+        prevSiblingIndex = getSiblingIndex(element),
+        shouldHaveSiblingIndex = true;
+
+    if (hasSibling) {
+
+      if (prevSiblingIndex === 1
+          && getNextSiblings(element, true).length === 0) {
+
+        shouldHaveSiblingIndex = false;
+      }
+    } else {
+
+      shouldHaveSiblingIndex = false;
+    }
+
+    if (shouldHaveSiblingIndex) {
+
+      label = label + ":nth-of-type(" + prevSiblingIndex + ")";
+    }
 
     return label;
 };
