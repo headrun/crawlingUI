@@ -164,6 +164,7 @@
       }
 
       e.preventDefault();
+      e.stopPropagation();
       e.stopImmediatePropagation();
 
       var $target = $(e.target),
@@ -194,27 +195,30 @@
       return false;
     }
 
+    function addEventListeners () {
 
-    function startHighlight () {
+      $("body").on("mouseover", handleMouseOver)
+               .on("mouseout", onMouseOut)
+               .on("click", onClick);
+    };
+
+    function removeEventListeners () {
+
+      $("body").off("mouseover", handleMouseOver)
+               .off("mouseout", onMouseOut)
+               .off("click", onClick);
+    };
+
+    addEventListeners();
+
+    function startSelection () {
 
       /**
        * Register event handlers and start highlighting
        * elements
-       *
-       * @returns {Promise}
        */
 
-      return new Promise(function (resolve) {
-
-        $(function () {
-
-          $("body").on("mouseover", handleMouseOver)
-                   .on("mouseout", onMouseOut)
-                   .on("click", onClick);
-
-          resolve();
-        });
-      });
+      // Implementation pending
     }
 
     function stopSelection () {
@@ -225,10 +229,7 @@
        */
 
        deSelectAll();
-
-       $("body").off("mouseover", handleMouseOver)
-                .off("mouseout", onMouseOut)
-                .off("click", onClick);
+       removeEventListeners();
     }
 
     var commands = {
@@ -251,12 +252,9 @@
           selectors = [];
         }
 
-        startHighlight().then(function () {
+        selectors.forEach(function (selector) {
 
-          selectors.forEach(function (selector) {
-
-            that.select(selector);
-          });
+          that.select(selector);
         });
       },
       "select": function (selector) {
@@ -418,6 +416,6 @@
     });
   }
 
-  window.onload = window.onerror = init;
+  window.addEventListener("DOMContentLoaded", init);
 
 }());

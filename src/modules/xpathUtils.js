@@ -437,17 +437,7 @@ function getBestMatch (nodeName, nodes, getSelectors) {
                                  return selectorsPrio[sel1] + selectorsPrio[sel2];
                                }, 0);
 
-                if (sel1Prio < sel2Prio) {
-
-                  return -1;
-                }
-
-                if (sel1Prio > sel2Prio) {
-
-                  return 1;
-                }
-
-                return 0;
+                return sel1Prio - sel2Prio;
               }).map(function (selGroup) {
 
                 return nodeName + selGroup.join("");
