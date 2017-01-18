@@ -1,5 +1,6 @@
 var _ = require("underscore"),
-    utils = require("./utils.js");
+    utils = require("./utils.js"),
+    siblings = require("./siblings.js");
 
 function areSiblingElements (ele1, ele2) {
 
@@ -97,24 +98,6 @@ function getSiblings (node, ofSameName) {
                      .concat(getNextSiblings(node, ofSameName));
 
   return siblings;
-}
-
-function hasSimilarSiblings (node, selector) {
-
-  var siblings = getSiblings(node),
-      _hasSimilarSibling = false;
-
-  for (var index = 0; index < siblings.length; index++) {
-
-    _hasSimilarSibling = siblings[index].match(selector);
-
-    if (_hasSimilarSibling) {
-
-      break;
-    }
-  }
-
-  return _hasSimilarSibling;
 }
 
 function getSiblingIndex (element) {
@@ -243,7 +226,7 @@ function getCommonCSSPath (paths) {
   return hasCommonPath ? currentCommonPath : null;
 }
 
-var attributesWhitelist = ["id", "itemprop", "name", /^data.*$/,
+var attributesWhitelist = ["id", "itemprop", "name", /^data-.*$/,
                            "for", "disabled", "type", "colspan",
                            "rowspan", "rel", "required"]
     attributesWhitelistPrority = {};
@@ -394,7 +377,7 @@ function getMatch (path, nodes) {
 
     for (var j = 0, currentPathNode; j < numNodesByPath; j++) {
 
-      if (currentNode === nodesByPath.item(j)) {
+      if (currentNode === nodesByPath[j]) {
 
         numMatching++;
         break;

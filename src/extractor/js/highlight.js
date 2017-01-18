@@ -175,12 +175,12 @@
         ipc.sendToHost(selectorLang, "");
       } else {
 
-        selector = xpathUtils.getElementCSSPath($target.get(0));
+        selector = xpathUtils.getElementCSSSelector($target.get(0));
 
         if (currentSelector) {
 
-          commonSelector = xpathUtils.getCommonCSSPath([currentSelector,
-                                                        selector]);
+          commonSelector = xpathUtils.getCommonCSSSelector([currentSelector,
+                                                            selector]);
 
           selector = commonSelector || selector;
         }
