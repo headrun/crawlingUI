@@ -1,14 +1,16 @@
 (function () {
+  "use strict";
 
   function init () {
 
     console.log("Guest onload executed");
 
     var $ = require("jquery"),
-        xpathUtils = require("./xpathUtils.js"),
+        DOMUtils = require("./DOMUtils"),
         ipc = require("electron").ipcRenderer,
         cssToXpath = require("css-to-xpath"),
-        selectorLang = "xpath";
+        selectorLang = "xpath",
+        document = window.document;
 
     var red = "#ea6153";
 
@@ -68,6 +70,8 @@
        *
        */
 
+      currentSelector = "";
+
       $("[ac-data-clicked]").each(function () {
 
         deSelect($(this));
@@ -95,21 +99,6 @@
                          });
     }
 
-    function highlightByCssPath (path) {
-
-      /**
-       * Given a css selector , highlights them
-       *
-       * @param path
-       * @returns {*}
-       */
-
-      return $(path).each(function () {
-
-        doSelect($(this));
-      });
-    }
-
     function handleMouseOver (e) {
 
       /**
@@ -122,8 +111,9 @@
 
       var $target = $(e.target);
 
-      if ($target.attr("ac-data-clicked"))
+      if ($target.attr("ac-data-clicked")) {
         return;
+      }
 
       backupStyle($target);
 
@@ -143,8 +133,9 @@
 
       var $target = $(e.target);
 
-      if ($target.attr("ac-data-clicked"))
+      if ($target.attr("ac-data-clicked")) {
         return;
+      }
 
       restoreStyle($target);
     }
@@ -175,11 +166,11 @@
         ipc.sendToHost(selectorLang, "");
       } else {
 
-        selector = xpathUtils.getElementCSSSelector($target.get(0));
+        selector = DOMUtils.getCSSSelector($target.get(0));
 
         if (currentSelector) {
 
-          commonSelector = xpathUtils.getCommonCSSSelector([currentSelector,
+          commonSelector = DOMUtils.getCommonCSSSelector([currentSelector,
                                                             selector]);
 
           selector = commonSelector || selector;
@@ -187,7 +178,7 @@
 
         currentSelector = selector;
 
-        selector = xpathUtils.optimise(selector);
+        selector = DOMUtils.optimise(selector);
 
         ipc.sendToHost(selectorLang, cssToXpath(selector));
       }
@@ -200,26 +191,16 @@
       $("body").on("mouseover", handleMouseOver)
                .on("mouseout", onMouseOut)
                .on("click", onClick);
-    };
+    }
 
     function removeEventListeners () {
 
       $("body").off("mouseover", handleMouseOver)
                .off("mouseout", onMouseOut)
                .off("click", onClick);
-    };
+    }
 
     addEventListeners();
-
-    function startSelection () {
-
-      /**
-       * Register event handlers and start highlighting
-       * elements
-       */
-
-      // Implementation pending
-    }
 
     function stopSelection () {
 
@@ -265,15 +246,16 @@
          * @param selector
          */
 
-        if (!selector)
+        if (!selector) {
           return;
+        }
 
         var elements, currentElement;
 
         try {
 
           elements = document.evaluate(selector, document, null,
-                                       XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+                                       window.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
         } catch (e) {
 
           console.log(e);
@@ -284,7 +266,7 @@
 
         const data = [];
 
-        for (var i = 0, currentElement; i < elements.snapshotLength; i++) {
+        for (var i = 0; i < elements.snapshotLength; i++) {
 
           currentElement = elements.snapshotItem(i);
 
@@ -317,8 +299,9 @@
          * @param selector
          */
 
-        if (!selector)
+        if (!selector) {
           return;
+        }
 
         var $elements = $(selector);
 
@@ -397,7 +380,7 @@
           break;
 
         case "deSelectAll":
-          method = "deSelectAll"
+          method = "deSelectAll";
           break;
 
         case "stopSelection":

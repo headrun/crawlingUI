@@ -1,6 +1,11 @@
-var _            = require("underscore"),
-    getMatch     = require("./match.js").getMatch,
-    getBestMatch = require("./match.js").getBestMatch;
+"use strict";
+
+var _                      = require("underscore"),
+    getMatch               = require("./match.js").getMatch,
+    getBestMatch           = require("./match.js").getBestMatch,
+    getAttributesSelectors = require("./selectors").getAttributesSelectors,
+    getClassSelectors      = require("./selectors").getClassSelectors,
+    document               = window.document;
 
 function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevElements) {
 
@@ -9,8 +14,7 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
     return;
   }
 
-  var areLeafNodes = optimisedPath.length === 0,
-      currentPath;
+  var areLeafNodes = optimisedPath.length === 0;
 
   var fullPathArray = fullPath.split(" > ");
 
@@ -20,13 +24,12 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
   fullPath = fullPathArray.join(" > ");
 
-  var matches = [], match, currentMatchPriority = {};
+  var currentMatchPriority = {};
 
   currentMatchPriority[nodeNameSelector] = 1;
 
   var selector = nodeNameSelector,
       selectors = [],
-      selectorsPrio = {},
       attributesSelector = getBestMatch(nodeNameSelector, currentElements,
                                         getAttributesSelectors);
 
@@ -49,14 +52,14 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
     if (attributesSelector) {
 
-      selectors.push(attributesSelector.selector + ":nth-of-type("
-                     + position + ")");
+      selectors.push(attributesSelector.selector + ":nth-of-type(" + position +
+                     ")");
     }
 
     if (classSelector) {
 
-      selectors.push(classSelector.selector + ":nth-of-type("
-                     + position + ")");
+      selectors.push(classSelector.selector + ":nth-of-type(" + position +
+                     ")");
     }
 
     selectors.push(nodeNameSelector + ":nth-of-type("+ position +")");
@@ -73,8 +76,9 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
   for (var i = 1; i < selectorMatches.length; i++) {
 
-    if (minSelectorPercent !== selectorMatches[i].percent)
+    if (minSelectorPercent !== selectorMatches[i].percent) {
       break;
+    }
   }
 
   selectorMatches = selectorMatches.slice(0, i)
@@ -90,7 +94,7 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
   var fullMatch = selector.match;
 
-  selector = selector.selector
+  selector = selector.selector;
 
   var useChildrenSlector = false;
 
@@ -104,7 +108,7 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
     useChildrenSlector = childrenMatch.percent < descendantMatch.percent;
   }
 
-  var prevElements = currentElements;
+  prevElements = currentElements;
 
   currentElements = currentElements.map(function (ele) {
 
@@ -115,8 +119,8 @@ function optimise (currentElements, optimisedPath, fullPath, prevSelector, prevE
 
   optimisedPath = selector + (areLeafNodes ? ""
                                            : useChildrenSlector ? " > "
-                                                                : " ")
-                           + optimisedPath;
+                                                                : " ") +
+                                             optimisedPath;
 
   console.log("Optimised Path", optimisedPath);
 

@@ -1,11 +1,10 @@
-var siblings  = require("./siblings.js"),
-    selectors = require("./selectors.js"),
-    match     = require("./match.js"),
+var selectors = require("./selectors.js"),
     optimise  = require("./optimise.js");
 
 module.exports = {
 
   getElementCSSSelector: selectors.getElementCSSSelector,
   getCommonCSSSelector : selectors.getCommonCSSSelector,
-  optimise             : optimise.optimiseCSSPath
+  getCSSSelector       : selectors.getCSSSelector,
+  optimise             : optimise.optimise
 };

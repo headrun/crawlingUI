@@ -1,7 +1,8 @@
+"use strict";
+
 const fs = require("fs"),
       path = require("path");
 
-import config from "../../../config.js";
 import React    from "react";
 import ReactDOM from "react-dom";
 import Webview from "./Webview.js";
@@ -13,6 +14,11 @@ import download from "../../images/download.svg";
 const modes = { "website": "w", "data"   : "d" };
 
 const newTabData = {"name": "New Column", "selector": ""};
+
+const getNewTabData = function getNewTabData () {
+
+  return Object.assign({}, newTabData, {"id": (new Date()).getTime()});
+};
 
 const saveDir = "./crawlers";
 
@@ -28,7 +34,7 @@ class App extends React.Component {
 
     url = url && decodeURIComponent((url[1] || "").trim()) || "";
 
-    const tabs = [Object.assign({}, newTabData)];
+    const tabs = [Object.assign({}, getNewTabData())];
 
     this.state = {
 
@@ -38,6 +44,7 @@ class App extends React.Component {
       "activePath"    : "",
       "isDevToolsOpen": false,
       "activeTabIndex": 0,
+      "activeTab"     : tabs[0],
       "tabs"          : tabs /* [{"name": "tabname", "selector": ".//div"}] */,
       "data"          : [],
       "reloadUrl"     : false
@@ -65,7 +72,7 @@ class App extends React.Component {
 
     const tabs = this.state.tabs;
 
-    tabs[this.state.activeTabIndex].selector = activePath;
+    this.state.activeTab.selector = activePath;
 
     console.log("Active path ", activePath);
 
@@ -74,10 +81,10 @@ class App extends React.Component {
 
   setActiveTab (activeTabIndex=0) {
 
-    const toBeActiveTab = this.state.tabs[activeTabIndex],
-          activePath    = toBeActiveTab.selector;
+    const activeTab  = this.state.tabs[activeTabIndex],
+          activePath = activeTab.selector;
 
-    this.setState({activeTabIndex, activePath});
+    this.setState({activeTabIndex, activeTab, activePath});
   }
 
   removeTab (index) {
@@ -113,7 +120,7 @@ class App extends React.Component {
     return fileName;
   }
 
-  handleSave (e) {
+  handleSave () {
 
     var fileName = this.saveConfig();
     window.alert(`Crawler save to ${fileName}`);
@@ -126,7 +133,7 @@ class App extends React.Component {
     const tabs = this.state.tabs,
           newTabIndex = tabs.length;
 
-    tabs.push(Object.assign({}, newTabData));
+    tabs.push(Object.assign({}, getNewTabData()));
 
     this.setState({tabs}, () => {
 
@@ -147,8 +154,9 @@ class App extends React.Component {
 
   onKeydown (e) {
 
-    if (e.keyCode !== 13)
-      return
+    if (e.keyCode !== 13) {
+      return;
+    }
 
     if (this.state.openUrl === e.target.value) {
 
@@ -164,16 +172,19 @@ class App extends React.Component {
       openUrl = "http://" + openUrl;
     }
 
+    const activeTab = getNewTabData();
+
     this.setState({
 
       activePath: "",
       activeTabIndex: 0,
-      tabs: [Object.assign({}, newTabData)],
+      activeTab,
+      tabs: [activeTab],
       openUrl
     });
   }
 
-  toggleDevTools (e) {
+  toggleDevTools () {
 
     this.setState({
 
@@ -182,6 +193,8 @@ class App extends React.Component {
   }
 
   render () {
+
+    var that = this;
 
     function getTabName (e, tabname) {
 
@@ -198,7 +211,7 @@ class App extends React.Component {
       return (
 
         <li key={tab.name + index}
-            className={index === this.state.activeTabIndex ? "active" : ""}>
+            className={index === that.state.activeTabIndex ? "active" : ""}>
           <a href="#"
              ref={(element) => { this.tabElements[index] = element; }}
              onClick={(e) => {e.preventDefault();this.setActiveTab(index);}}>
@@ -208,7 +221,7 @@ class App extends React.Component {
             <input type="text"
                    className="cursor"
                    onKeyUp={(e) => {
-                     this.setTabName(tab, getTabName(e, tab.name), index)
+                     that.setTabName(tab, getTabName(e, tab.name), index);
                    }}/>
             <span className="close text-danger"
                   onClick={(e) => this.handleCloseTab(e, index)}>&times;</span>
@@ -223,7 +236,7 @@ class App extends React.Component {
 
     function getDataItem (text) {
 
-      return <li key={dataCounter++} className="list-group-item">{text}</li>
+      return <li key={dataCounter++} className="list-group-item">{text}</li>;
     }
 
     const dataList = this.state.data.map(getDataItem);
@@ -235,9 +248,9 @@ class App extends React.Component {
     }
 
     return (
-      <div className={"content"
-                      + (this.state.activePath ? " has-footer" : "")
-                      + (this.state.isDevToolsOpen ? " has-dev-tools" : "")
+      <div className={"content" +
+                      (this.state.activePath ? " has-footer" : "") +
+                      (this.state.isDevToolsOpen ? " has-dev-tools" : "")
                      }>
         <header>
           <div className="input-group">
@@ -266,12 +279,13 @@ class App extends React.Component {
           <div className="browser">
             <Webview url={this.state.openUrl}
                      activePath={this.state.activePath}
+                     activeTab={this.state.activeTab}
                      setActivePath={this.setActivePath.bind(this)}
                      setUrl={(url) => this.setState({url, "openUrl": url})}
                      showDevTools={this.state.isDevToolsOpen}
                      setData={(data) => this.setState({data})}
                      reloadUrl={this.state.reloadUrl}
-                     hideDevTools={() => {this.setState({isDevToolsOpen: false})}}>
+                     hideDevTools={() => {this.setState({isDevToolsOpen: false});}}>
             </Webview>
           </div>
         </div>
@@ -284,7 +298,7 @@ class App extends React.Component {
               </div>
               <input className="form-control" type="text"
                      value={this.state.activePath}
-                     onChange={(e) => {this.setActivePath(e.target.value)}}/>
+                     onChange={(e) => {this.setActivePath(e.target.value);}}/>
             </div>
             <div className="sample-data">
               <p><b>Sample Data:</b> ({this.state.data.length + " Records"})</p>
@@ -295,9 +309,9 @@ class App extends React.Component {
           </div>
         </footer>
       </div>
-    )
+    );
   }
 }
 
 ReactDOM.render(<App/>,
-                document.getElementById("react-root"));
+                window.document.getElementById("react-root"));

@@ -1,4 +1,7 @@
-var utils = require("utils");
+"use strict";
+
+var utils = require("../utils"),
+    document = window.document;
 
 function getMatch (path, nodes) {
 
@@ -19,7 +22,7 @@ function getMatch (path, nodes) {
 
     currentNode = nodes[i];
 
-    for (var j = 0, currentPathNode; j < numNodesByPath; j++) {
+    for (var j = 0; j < numNodesByPath; j++) {
 
       if (currentNode === nodesByPath[j]) {
 
@@ -45,8 +48,6 @@ function getBestMatch (nodeName, nodes, getSelectors) {
 
     return;
   }
-
-  var selectorCombinations = [];
 
   selectors.forEach(function (selector, index) {
 

@@ -115,7 +115,8 @@ class Webview extends React.Component {
   componentWillReceiveProps(nextProps) {
 
     const webview = this.refs.webview,
-          activePath = nextProps.activePath;
+          activePath = nextProps.activePath,
+          activeTab = nextProps.activeTab;
 
     if (nextProps.reloadUrl) {
 
@@ -124,9 +125,11 @@ class Webview extends React.Component {
 
     if (this.props.activePath !== activePath) {
 
-      webview.send("command",
-                   "deSelectAll",
-                   this.props.activePath);
+      if (this.props.activeTab.id !== activeTab.id) {
+        webview.send("command",
+                     "deSelectAll",
+                     this.props.activePath);
+      }
 
       if (activePath) {
 

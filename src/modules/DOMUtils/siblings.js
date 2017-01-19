@@ -1,3 +1,5 @@
+"use strict";
+
 function areSiblingElements (ele1, ele2) {
 
   /**
@@ -19,8 +21,10 @@ function areSiblingElements (ele1, ele2) {
     prevSibling = ele1.prevSibling;
   }
 
-  if (areSiblings)
+  if (areSiblings) {
+
     return true;
+  }
 
   while (nextSibling) {
 
@@ -42,7 +46,7 @@ function getPrevSiblings (node, ofSameName) {
       siblings = [],
       nodeName = node.nodeName.toLowerCase();
 
-  if (nodeName === Node.DOCUMENT_TYPE_NODE) {
+  if (nodeName === window.Node.DOCUMENT_TYPE_NODE) {
 
     return siblings;
   }
@@ -67,7 +71,7 @@ function getNextSiblings (node, ofSameName) {
       siblings = [],
       nodeName = node.nodeName.toLowerCase();
 
-  if (nodeName === Node.DOCUMENT_TYPE_NODE) {
+  if (nodeName === window.Node.DOCUMENT_TYPE_NODE) {
 
     return siblings;
   }
@@ -88,7 +92,7 @@ function getNextSiblings (node, ofSameName) {
 
 function getSiblings (node, ofSameName) {
 
-  var sibling, siblings = [];
+  var siblings = [];
 
   siblings = siblings.concat(getPrevSiblings(node, ofSameName))
                      .concat(getNextSiblings(node, ofSameName));
@@ -97,8 +101,6 @@ function getSiblings (node, ofSameName) {
 }
 
 function getSiblingIndex (element) {
-
-  var index = 1;
 
   var prevSiblings = getPrevSiblings(element, true);
 

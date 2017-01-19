@@ -1,9 +1,14 @@
-var _ = require("underscore");
+"use strict";
+
+var _ = require("underscore"),
+    siblings = require("./siblings");
 
 function getElementCSSSelector (element) {
 
-    if (!element || !element.localName)
-        return "null";
+    if (!element || !element.localName) {
+
+      return "null";
+    }
 
     var label = element.localName.toLowerCase();
 
@@ -18,8 +23,8 @@ function getElementCSSSelector (element) {
 
     if (hasSibling) {
 
-      if (prevSiblingIndex === 1
-          && siblings.getNextSiblings(element, true).length === 0) {
+      if (prevSiblingIndex === 1 &&
+          siblings.getNextSiblings(element, true).length === 0) {
 
         shouldHaveSiblingIndex = false;
       }
@@ -34,20 +39,20 @@ function getElementCSSSelector (element) {
     }
 
     return label;
-};
+}
 
 function getCSSSelector (element, includeIds, seperatePaths) {
 
     var paths = [];
 
-    for (; element && element.nodeType == 1; element = element.parentNode)
+    for (; element && element.nodeType === 1; element = element.parentNode)
     {
         var selector = getElementCSSSelector(element, includeIds);
         paths.splice(0, 0, selector);
     }
 
     return paths.length ? (seperatePaths ? paths : paths.join(" > ")) : null;
-};
+}
 
 function getCommonCSSSelector (paths) {
 
@@ -58,16 +63,15 @@ function getCommonCSSSelector (paths) {
 
   var firstElementPaths = paths.shift().split(" > ");
 
-  var pathsCanBeMerged = true,
-      commomLength = firstElementPaths.length,
+  var commomLength = firstElementPaths.length,
       isSameLength = true;
 
   var pathArrays = paths.map(function (path) {
 
                      var currentPaths = path.split(" > ");
 
-                     isSameLength = isSameLength
-                                    && currentPaths.length === commomLength;
+                     isSameLength = isSameLength &&
+                                    currentPaths.length === commomLength;
 
                      return currentPaths;
                    });
@@ -82,8 +86,9 @@ function getCommonCSSSelector (paths) {
 
   pathArrays[0].forEach(function (currentElementPath, index) {
 
-    if (!hasCommonPath)
-      return
+    if (!hasCommonPath) {
+      return;
+    }
 
     var referencePath = firstElementPaths[index];
 
@@ -100,10 +105,12 @@ function getCommonCSSSelector (paths) {
       return;
     }
 
-    var currentElement = document.querySelectorAll(currentCommonPath
-                                                   + " > " + currentElementPath)[0],
-        referenceElement = document.querySelectorAll(currentCommonPath
-                                                     + " > " + referencePath)[0];
+    var currentElement = window.document.querySelectorAll(currentCommonPath +
+                                                          " > " +
+                                                          currentElementPath)[0],
+        referenceElement = window.document.querySelectorAll(currentCommonPath +
+                                                            " > " +
+                                                            referencePath)[0];
 
     if (currentElement.nodeName !== referenceElement.nodeName) {
 
@@ -119,7 +126,7 @@ function getCommonCSSSelector (paths) {
 
 var attributesWhitelist = ["id", "itemprop", "name", /^data-.*$/,
                            "for", "disabled", "type", "colspan",
-                           "rowspan", "rel", "required"]
+                           "rowspan", "rel", "required"],
     attributesWhitelistPrority = {};
 
 
@@ -138,7 +145,9 @@ function getAttributesSelectors (nodes) {
     return [];
   }
 
-  for (var i = 0, name, value; i < allAttributes.length; i++) {
+  var i = 0;
+
+  for (var name, value; i < allAttributes.length; i++) {
 
     name = allAttributes[i].name.toLowerCase();
     value = allAttributes[i].value;
@@ -152,8 +161,9 @@ function getAttributesSelectors (nodes) {
   }
 
   var commonArributesList = Object.keys(commonArributesHash);
+  i = 0;
 
-  for (var i=0, node; i < nodes.length; i++) {
+  for (var node; i < nodes.length; i++) {
 
     node = nodes[i];
 
@@ -205,15 +215,15 @@ function getAttributesSelectors (nodes) {
 
   return commonArributesList.map(function (attributeName) {
 
-    return "["+ attributeName +"=\""
-              + commonArributesHash[attributeName].replace("\"", "\\\"") + "\"]";
+    return "["+ attributeName +"=\"" +
+           commonArributesHash[attributeName].replace("\"", "\\\"") + "\"]";
   });
 }
 
 function getClassArray (className) {
 
-  var classNames = className.trim()
-                     ? className.trim().split(/\s+/)
+  var classNames = className.trim() ?
+                     className.trim().split(/\s+/)
                      : [];
 
   return classNames.filter(function (className) {
@@ -247,9 +257,11 @@ function getClassSelectors (nodes) {
   });
 }
 
-module.exports = function () {
+module.exports = {
 
-  getElementCSSSelector: getElementCSSSelector,
-  getCSSSelector       : getCSSSelector,
-  getCommonCSSPath     : getCommonCSSPath
+  getElementCSSSelector : getElementCSSSelector,
+  getCSSSelector        : getCSSSelector,
+  getCommonCSSSelector  : getCommonCSSSelector,
+  getAttributesSelectors: getAttributesSelectors,
+  getClassSelectors     : getClassSelectors
 };
