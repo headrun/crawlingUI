@@ -70,8 +70,6 @@
        *
        */
 
-      currentSelector = "";
-
       $("[ac-data-clicked]").each(function () {
 
         deSelect($(this));
@@ -211,6 +209,11 @@
 
        deSelectAll();
        removeEventListeners();
+    }
+
+    function resetSelector () {
+
+      currentSelector = "";
     }
 
     var commands = {
@@ -353,6 +356,9 @@
         ipc.sendToHost("content", content);
 
         return content;
+      }, "resetAutoSelect": function () {
+
+        return resetSelector();
       }
     };
 
@@ -386,6 +392,11 @@
         case "stopSelection":
 
           method = "stopSelection";
+          break;
+
+        case "resetAutoSelect":
+
+          method = "resetAutoSelect";
           break;
 
         default:

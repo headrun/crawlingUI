@@ -87,10 +87,41 @@ class App extends React.Component {
     this.setState({activeTabIndex, activeTab, activePath});
   }
 
+  addTab () {
+
+    const tabs = this.state.tabs,
+          newTabIndex = tabs.length;
+
+    tabs.push(Object.assign({}, getNewTabData()));
+
+    this.setState({tabs}, () => {
+
+      this.setActiveTab(newTabIndex);
+      this.tabElements[newTabIndex].focus();
+    });
+  }
+
   removeTab (index) {
 
+    let nextActiveTabIndex, createNewTab = false;
+
+    if (index - 1 > 0) {
+
+      nextActiveTabIndex = index - 1;
+    } else if (index + 1 < this.state.tabs.length) {
+
+      nextActiveTabIndex = index;
+    } else {
+
+      createNewTab = true;
+    }
+
     this.state.tabs.splice(index, 1);
-    this.setState({"tabs": this.state.tabs});
+
+    this.setState({"tabs": this.state.tabs}, () => {
+
+      return createNewTab ? this.addTab(): this.setActiveTab(nextActiveTabIndex);
+    });
   }
 
   setTabName (tab, name, index) {
@@ -130,19 +161,13 @@ class App extends React.Component {
 
     e.preventDefault();
 
-    const tabs = this.state.tabs,
-          newTabIndex = tabs.length;
-
-    tabs.push(Object.assign({}, getNewTabData()));
-
-    this.setState({tabs}, () => {
-
-      this.setActiveTab(newTabIndex);
-      this.tabElements[newTabIndex].focus();
-    });
+    this.addTab();
   }
 
   handleCloseTab (e, index) {
+
+    e.preventDefault();
+    e.stopPropagation();
 
     if (index < 0 || index > this.state.tabs.length - 1) {
 

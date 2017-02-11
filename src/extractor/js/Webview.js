@@ -1,5 +1,6 @@
 import React    from "react";
 import ReactDOM from "react-dom";
+import IPCHelper from "../../modules/ipcHelper.js";
 
 const validChannels = ["xpath", "css", "data"];
 
@@ -15,6 +16,7 @@ class Webview extends React.Component {
     };
 
     this.currentUrl = props.url;
+    this.currentTab = props.activeTab;
 
     this.__handleGuestMessages  = this.__handleGuestMessages.bind(this);
     this.__handleContentLoaded  = this.__handleContentLoaded.bind(this);
@@ -22,11 +24,12 @@ class Webview extends React.Component {
     this.__handleRedirect       = this.__handleRedirect.bind(this);
     this.__handleNavigation     = this.__handleNavigation.bind(this);
     this.__handleDevToolsClosed = this.__handleDevToolsClosed.bind(this);
+    this.__handleWebviewFail    = this.__handleWebviewFail.bind(this);
   }
 
   __handleGuestMessages (e) {
 
-    console.log(`Guest says: ${e.sourceId} : ${e.line}\n${e.message}`);
+    console.log(`Guest: ${e.sourceId} : ${e.line}\n${e.message}`);
   }
 
   __handleContentLoaded () {
@@ -99,6 +102,11 @@ class Webview extends React.Component {
     this.props.hideDevTools();
   }
 
+  __handleWebviewFail () {
+
+    window.alert("Unable to load URL");
+  }
+
   setGuestLoading (isLoading) {
 
     this.setState({
@@ -115,21 +123,24 @@ class Webview extends React.Component {
   componentWillReceiveProps(nextProps) {
 
     const webview = this.refs.webview,
-          activePath = nextProps.activePath,
-          activeTab = nextProps.activeTab;
+          activePath = nextProps.activePath;
 
     if (nextProps.reloadUrl) {
 
       return webview.reload();
     }
 
+    if (this.currentTab.id !== nextProps.activeTab.id) {
+
+      webview.send("command", "resetAutoSelect");
+      this.currentTab = nextProps.activeTab;
+    }
+
     if (this.props.activePath !== activePath) {
 
-      if (this.props.activeTab.id !== activeTab.id) {
-        webview.send("command",
-                     "deSelectAll",
-                     this.props.activePath);
-      }
+      webview.send("command",
+                   "deSelectAll",
+                   this.props.activePath);
 
       if (activePath) {
 
@@ -168,6 +179,8 @@ class Webview extends React.Component {
                              this.__handleNavigation);
     webview.addEventListener("devtools-closed",
                              this.__handleDevToolsClosed);
+    webview.addEventListener("did-fail-load",
+                             this.__handleWebviewFail);
 
     webview.setAttribute("plugins", false);
 
@@ -194,6 +207,8 @@ class Webview extends React.Component {
                                 this.__handleNavigation);
     webview.removeEventListener("devtools-closed",
                                 this.__handleDevToolsClosed);
+    webview.removeEventListener("did-fail-load",
+                                this.__handleWebviewFail);
   }
 
   render () {
