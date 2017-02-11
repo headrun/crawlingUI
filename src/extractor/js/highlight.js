@@ -1,12 +1,16 @@
 (function () {
+  "use strict";
 
   function init () {
 
     console.log("Guest onload executed");
 
     var $ = require("jquery"),
-        xpathUtils = require("./xpathUtils.js"),
-        ipc = require("electron").ipcRenderer;
+        DOMUtils = require("./DOMUtils"),
+        ipc = require("electron").ipcRenderer,
+        cssToXpath = require("css-to-xpath"),
+        selectorLang = "xpath",
+        document = window.document;
 
     var red = "#ea6153";
 
@@ -93,21 +97,6 @@
                          });
     }
 
-    function highlightByCssPath (path) {
-
-      /**
-       * Given a css selector , highlights them
-       *
-       * @param path
-       * @returns {*}
-       */
-
-      return $(path).each(function () {
-
-        doSelect($(this));
-      });
-    }
-
     function handleMouseOver (e) {
 
       /**
@@ -120,8 +109,9 @@
 
       var $target = $(e.target);
 
-      if ($target.attr("ac-data-clicked"))
+      if ($target.attr("ac-data-clicked")) {
         return;
+      }
 
       backupStyle($target);
 
@@ -141,8 +131,9 @@
 
       var $target = $(e.target);
 
-      if ($target.attr("ac-data-clicked"))
+      if ($target.attr("ac-data-clicked")) {
         return;
+      }
 
       restoreStyle($target);
     }
@@ -162,6 +153,7 @@
       }
 
       e.preventDefault();
+      e.stopPropagation();
       e.stopImmediatePropagation();
 
       var $target = $(e.target),
@@ -169,51 +161,44 @@
 
       if ($target.attr("ac-data-clicked")) {
 
-        ipc.sendToHost("cssPath", "");
+        ipc.sendToHost(selectorLang, "");
       } else {
 
-        selector = xpathUtils.getElementCSSPath($target.get(0));
+        selector = DOMUtils.getCSSSelector($target.get(0));
 
         if (currentSelector) {
 
-          commonSelector = xpathUtils.getCommonCSSPath([currentSelector,
-                                                        selector]);
+          commonSelector = DOMUtils.getCommonCSSSelector([currentSelector,
+                                                            selector]);
 
           selector = commonSelector || selector;
         }
 
         currentSelector = selector;
 
-        selector = xpathUtils.optimise(selector);
+        selector = DOMUtils.optimise(selector);
 
-        ipc.sendToHost("cssPath", selector);
+        ipc.sendToHost(selectorLang, cssToXpath(selector));
       }
 
       return false;
     }
 
+    function addEventListeners () {
 
-    function startHighlight () {
-
-      /**
-       * Register event handlers and start highlighting
-       * elements
-       *
-       * @returns {Promise}
-       */
-
-      return new Promise(function (resolve) {
-
-        $(function () {
-
-          $("body").on("mouseover", handleMouseOver)
-                   .on("mouseout", onMouseOut)
-                   .on("click", onClick);
-
-          resolve();
-        });
-      });
+      $("body").on("mouseover", handleMouseOver)
+               .on("mouseout", onMouseOut)
+               .on("click", onClick);
     }
+
+    function removeEventListeners () {
+
+      $("body").off("mouseover", handleMouseOver)
+               .off("mouseout", onMouseOut)
+               .off("click", onClick);
+    }
+
+    addEventListeners();
 
     function stopSelection () {
 
@@ -223,10 +208,12 @@
        */
 
        deSelectAll();
+       removeEventListeners();
+    }
 
-       $("body").off("mouseover", handleMouseOver)
-                .off("mouseout", onMouseOut)
-                .off("click", onClick);
+    function resetSelector () {
+
+      currentSelector = "";
     }
 
     var commands = {
@@ -240,19 +227,18 @@
          * @param selectors
          */
 
-         console.log("Start selection");
+        console.log("Start selection");
+
+        var that = this;
 
         if (!selectors || !selectors.length || selectors.length === 0) {
 
           selectors = [];
         }
 
-        startHighlight().then(function () {
+        selectors.forEach(function (selector) {
 
-          selectors.forEach(function (selector) {
-
-            this.select(selector);
-          });
+          that.select(selector);
         });
       },
       "select": function (selector) {
@@ -263,15 +249,50 @@
          * @param selector
          */
 
-        if (!selector)
+        if (!selector) {
           return;
+        }
 
-        var $elements = $(selector);
+        var elements, currentElement;
 
-        $elements.each(function() {
+        try {
 
-          doSelect($(this));
-        });
+          elements = document.evaluate(selector, document, null,
+                                       window.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+        } catch (e) {
+
+          console.log(e);
+          return;
+        }
+
+        console.log("snapshotLength " + elements.snapshotLength);
+
+        const data = [];
+
+        for (var i = 0; i < elements.snapshotLength; i++) {
+
+          currentElement = elements.snapshotItem(i);
+
+          if (currentElement) {
+
+            data.push(currentElement.textContent);
+
+            if (currentElement.nodeType === document.TEXT_NODE) {
+
+              currentElement = $(currentElement).parent();
+            } else if (currentElement.nodeType === document.ATTRIBUTE_NODE) {
+
+              currentElement = $(currentElement.ownerElement);
+            }else {
+
+              currentElement = $(currentElement);
+            }
+
+            doSelect(currentElement);
+          }
+        }
+
+        ipc.sendToHost("data", data);
       },
       "deSelect": function (selector) {
 
@@ -281,8 +302,9 @@
          * @param selector
          */
 
-        if (!selector)
+        if (!selector) {
           return;
+        }
 
         var $elements = $(selector);
 
@@ -303,6 +325,40 @@
          */
 
         stopSelection();
+      },
+      "content": function (selector) {
+
+        selector = selector || currentSelector;
+
+        var content = [], currentElement, elements;
+
+        if (selectorLang === "xpath") {
+
+          elements = document.evaluate(selector, document);
+
+          do {
+
+            currentElement = elements.iterateNext();
+
+            if (currentElement) {
+
+              content.push(currentElement.textContent);
+            }
+          } while (currentElement);
+        } else if(selectorLang === "css") {
+
+          $(selector).each(function () {
+
+            content.push($(this).text());
+          });
+        }
+
+        ipc.sendToHost("content", content);
+
+        return content;
+      }, "resetAutoSelect": function () {
+
+        return resetSelector();
       }
     };
 
@@ -330,12 +386,17 @@
           break;
 
         case "deSelectAll":
-          method = "deSelectAll"
+          method = "deSelectAll";
           break;
 
         case "stopSelection":
 
           method = "stopSelection";
+          break;
+
+        case "resetAutoSelect":
+
+          method = "resetAutoSelect";
           break;
 
         default:
@@ -349,6 +410,6 @@
     });
   }
 
-  window.onload = window.onerror = init;
+  window.addEventListener("DOMContentLoaded", init);
 
 }());

@@ -1,5 +1,8 @@
 import React    from "react";
 import ReactDOM from "react-dom";
+import IPCHelper from "../../modules/ipcHelper.js";
+
+const validChannels = ["xpath", "css", "data"];
 
 class Webview extends React.Component {
 
@@ -12,12 +15,19 @@ class Webview extends React.Component {
       isGuestLoading: true
     };
 
-    this.__logGuestMessages = this.__logGuestMessages.bind(this);
-    this.__handleContentLoaded = this.__handleContentLoaded.bind(this);
-    this.__onIPCMessage = this.__onIPCMessage.bind(this);
+    this.currentUrl = props.url;
+    this.currentTab = props.activeTab;
+
+    this.__handleGuestMessages  = this.__handleGuestMessages.bind(this);
+    this.__handleContentLoaded  = this.__handleContentLoaded.bind(this);
+    this.__handleIPCMessage     = this.__handleIPCMessage.bind(this);
+    this.__handleRedirect       = this.__handleRedirect.bind(this);
+    this.__handleNavigation     = this.__handleNavigation.bind(this);
+    this.__handleDevToolsClosed = this.__handleDevToolsClosed.bind(this);
+    this.__handleWebviewFail    = this.__handleWebviewFail.bind(this);
   }
 
-  __logGuestMessages (e) {
+  __handleGuestMessages (e) {
 
     console.log(`Guest: ${e.sourceId} : ${e.line}\n${e.message}`);
   }
@@ -39,19 +49,62 @@ class Webview extends React.Component {
 
   }
 
-  __onIPCMessage (e) {
+  __handleIPCMessage (e) {
 
-    if (!e.channel || e.channel !== "cssPath") {
+    if (!e.channel || validChannels.indexOf(e.channel) < 0) {
 
       return;
     }
 
-    var cssPath = e.args[0];
+    if (e.channel === "xpath") {
 
-    if (cssPath) {
+      const cssPath = e.args[0];
 
-      this.props.setActivePath(cssPath);
+      if (cssPath) {
+
+        this.props.setActivePath(cssPath);
+      }
+    } else if (e.channel === "data") {
+
+      this.props.setData(e.args[0] || []);
     }
+  }
+
+  __setCurrentUrl (url) {
+
+    if (this.currentUrl === url) {
+
+      return;
+    }
+
+    this.setGuestLoading(true);
+    this.currentUrl = url;
+    this.props.setUrl(url);
+  }
+
+  __handleRedirect (e) {
+
+    return e.isMainFrame && this.__setCurrentUrl(e.newURL);
+  }
+
+  __handleNavigation (e) {
+
+    if ("isMainFrame" in e && !e.isMainFrame) {
+
+      return;
+    }
+
+    return this.__setCurrentUrl(e.url);
+  }
+
+  __handleDevToolsClosed () {
+
+    this.props.hideDevTools();
+  }
+
+  __handleWebviewFail () {
+
+    window.alert("Unable to load URL");
   }
 
   setGuestLoading (isLoading) {
@@ -60,26 +113,51 @@ class Webview extends React.Component {
 
       "isGuestLoading": !!isLoading
     });
+  }
 
-    console.log("Guest loaded");
+  showDevTools (show) {
+
+    return this.refs.webview[show ? "openDevTools": "claseDevTools"]();
   }
 
   componentWillReceiveProps(nextProps) {
 
-    const activePath = nextProps.activePath;
+    const webview = this.refs.webview,
+          activePath = nextProps.activePath;
 
-    if (this.props.activePath === activePath)
-      return;
+    if (nextProps.reloadUrl) {
 
-    this.refs.webview.send("command",
-                           "deSelectAll",
-                           this.props.activePath);
+      return webview.reload();
+    }
 
-    if (activePath) {
+    if (this.currentTab.id !== nextProps.activeTab.id) {
 
-      this.refs.webview.send("command",
-                             "select",
-                             activePath);
+      webview.send("command", "resetAutoSelect");
+      this.currentTab = nextProps.activeTab;
+    }
+
+    if (this.props.activePath !== activePath) {
+
+      webview.send("command",
+                   "deSelectAll",
+                   this.props.activePath);
+
+      if (activePath) {
+
+        webview.send("command",
+                     "select",
+                     activePath);
+      }
+    }
+
+    if (this.currentUrl !== nextProps.url) {
+
+      webview.src = nextProps.url;
+    }
+
+    if (nextProps.showDevTools) {
+
+      this.showDevTools(nextProps.showDevTools);
     }
   }
 
@@ -92,15 +170,25 @@ class Webview extends React.Component {
     webview.addEventListener("did-stop-loading",
                              this.__handleContentLoaded);
     webview.addEventListener("console-message",
-                             this.__logGuestMessages);
+                             this.__handleGuestMessages);
     webview.addEventListener("ipc-message",
-                             this.__onIPCMessage);
+                             this.__handleIPCMessage);
+    webview.addEventListener("did-get-redirect-request",
+                             this.__handleRedirect);
+    webview.addEventListener("did-navigate",
+                             this.__handleNavigation);
+    webview.addEventListener("devtools-closed",
+                             this.__handleDevToolsClosed);
+    webview.addEventListener("did-fail-load",
+                             this.__handleWebviewFail);
 
     webview.setAttribute("plugins", false);
 
     webview.setAttribute("preload", "./highlight.js");
 
     webview.setAttribute("src", this.props.url);
+
+    this.currentUrl = this.props.url;
   }
 
   componentWillUnmount () {
@@ -110,9 +198,17 @@ class Webview extends React.Component {
     webview.removeEventListener("did-stop-loading",
                                 this.__handleContentLoaded);
     webview.removeEventListener("console-message",
-                                this.__logGuestMessages);
+                                this.__handleGuestMessages);
     webview.removeEventListener("ipc-message",
-                                this.__onIPCMessage);
+                                this.__handleIPCMessage);
+    webview.removeEventListener("did-get-redirect-request",
+                                this.__handleRedirect);
+    webview.removeEventListener("did-navigate",
+                                this.__handleNavigation);
+    webview.removeEventListener("devtools-closed",
+                                this.__handleDevToolsClosed);
+    webview.removeEventListener("did-fail-load",
+                                this.__handleWebviewFail);
   }
 
   render () {

@@ -7,11 +7,23 @@
     "start": "electron .",
     "postinstall": "webpack --config webpack.config.js",
     "pack": "build --dir",
-    "dist": "build"
+    "dist": "build -mwl"
   },
   "env": "development",
   "build": {
-    "appId": "crawlingUI"
+    "appId": "crawlingUI",
+    "files": [
+      "*.js",
+      "compiled/**/*.*",
+      "node_modules/**/*.*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target"  : "dmg"
+    },
+    "win": {
+      "iconUrl": "https://pamidi.me/favicon.ico"
+    }
   },
   "repository": {
     "type": "git",
@@ -36,18 +48,22 @@
     "css-loader": "^0.26.1",
     "electron": "^1.4.1",
     "electron-builder": "^10.8.1",
+    "electron-packager": "^8.4.0",
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.4",
     "html-webpack-plugin": "^2.24.1",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
     "react": "^15.4.1",
+    "react-contenteditable": "^2.0.1",
     "react-dom": "^15.4.1",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
-    "webpack": "^1.14.0"
+    "webpack": "^1.14.0",
+    "webpack-target-electron-renderer": "^0.4.0"
   },
   "dependencies": {
+    "css-to-xpath": "^0.1.0",
     "jquery": "^3.1.1",
     "underscore": "^1.8.3"
   }
