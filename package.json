@@ -7,7 +7,7 @@
     "start": "electron .",
     "postinstall": "webpack --config webpack.config.js",
     "pack": "build --dir",
-    "dist": "build -mwl"
+    "dist": "build"
   },
   "env": "development",
   "build": {

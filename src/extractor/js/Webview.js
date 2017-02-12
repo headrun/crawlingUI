@@ -12,7 +12,7 @@ class Webview extends React.Component {
 
     this.state = {
 
-      isGuestLoading: true
+      isGuestLoading: false
     };
 
     this.currentUrl = props.url;
@@ -164,8 +164,6 @@ class Webview extends React.Component {
   componentDidMount () {
 
     const webview = this.refs.webview;
-
-    this.setGuestLoading(true);
 
     webview.addEventListener("did-stop-loading",
                              this.__handleContentLoaded);
