@@ -1,42 +1,50 @@
-var HtmlWebpackPlugin = require("html-webpack-plugin"),
-    webpack = require('webpack');
+var path = require("path"),
+    HtmlWebpackPlugin = require("html-webpack-plugin"),
+    CopyWebpackPlugin = require('copy-webpack-plugin'),
+    webpack = require('webpack'),
+    webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
 
-module.exports = {
+var options = {
 
+  "target": "electron",
 	"entry" : {"index"    : "./src/js/index.js",
              "extractor/index": "./src/extractor/js/index.js"},
 	"output": {
 
-		"path"      : "./build",
+		"path"      : "./compiled",
     "publicPath": "/",
 		"filename"  : "[name].js"
 	},
-       "module": {
+  "module": {
 
-              "loaders": [
+          "loaders": [
 
-                     {
-              		"test"   : /\.jsx?$/,
-              		"loader" : "babel-loader",
-              		"query"  : {
+                 {
+          		"test"   : /\.jsx?$/,
+          		"loader" : "babel-loader",
+              "include": [
 
-              	             "presets": ["es2015", "react"]
-              		}
-              	},
-                     {
-                            "test"  : /\.html$/,
-                            "loader": "html"
-                     },
-              	{
+                path.resolve(__dirname, "src")
+              ],
+          		"query"  : {
 
-              		"test"  : /\.(less|css)$/,
-              		"loader": "style-loader!css-loader!less-loader"
-              	},
-              	{
-              		"test"  : /\.(png|jpg|eot|woff2|woff|ttf|svg)$/,
-              		"loader": "url-loader?limit=8192"
-              	}
-              ]
+          	             "presets": ["es2015", "react"]
+          		}
+          	},
+                 {
+                        "test"  : /\.html$/,
+                        "loader": "html"
+                 },
+          	{
+
+          		"test"  : /\.(less|css)$/,
+          		"loader": "style-loader!css-loader!less-loader"
+          	},
+          	{
+          		"test"  : /\.(png|jpg|eot|woff2|woff|ttf|svg)$/,
+          		"loader": "url-loader?limit=8192"
+          	}
+          ]
        },
        "plugins": [
 
@@ -54,6 +62,19 @@ module.exports = {
               new webpack.optimize.CommonsChunkPlugin({
 
                 name: 'common'
-              })
+              }),
+              new CopyWebpackPlugin([
+
+                {"from": "./src/extractor/js/highlight.js",
+                 "to"  : "extractor/highlight.js"},
+                {"from": "./src/modules/*.js",
+                 "to"  : "extractor/[name].js"},
+                {"from": "./src/modules/DOMUtils/*.js",
+                 "to"  : "extractor/DOMUtils/[name].js"}
+              ])
        ]
-}
+};
+
+options.target = webpackTargetElectronRenderer(options);
+
+module.exports = options;

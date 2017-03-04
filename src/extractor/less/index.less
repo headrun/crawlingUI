@@ -1,1 +1,156 @@
-@import "../../vendor/bootstrap/less/bootstrap.less";
+@import "../../less/base.less";
+
+div.content {
+
+  position: relative;
+  padding-top: 34px;
+  .cover;
+
+  header, footer {
+
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background-color: @gray-lighter;
+  }
+
+  header {
+
+    top: 0;
+  }
+
+  footer {
+
+    display: none;
+    bottom: 0;
+    height: 250px;
+
+    div.footer-content {
+
+      position: relative;
+      padding-top: 34px;
+      .cover;
+
+      div.input-group {
+
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+      }
+
+      div.sample-data {
+
+        .cover;
+        overflow-y: auto;
+
+        > p {
+
+          margin: 0;
+          padding: 5px;
+        }
+      }
+    }
+  }
+
+  &.has-footer {
+
+    padding-bottom: 250px;
+
+    footer {
+
+      display: block;
+    }
+  }
+
+  div.content-body {
+
+    .cover;
+    background-color: @gray-lighter;
+    padding-top: 52px;
+    position: relative;
+
+    ul.nav {
+
+      width: 100%;
+      position: absolute;
+      top: 10px;
+      left: 0;
+
+      li {
+
+        input.cursor, input.cursor:focus {
+
+          border: 0;
+          outline: 0;
+          box-shadow: none;
+          display: inline-block;
+          width: 0px;
+        }
+
+        span.close {
+
+          display: none;
+          margin-left: 10px;
+          .text-danger;
+        }
+
+        &.active {
+
+          input.cursor {
+
+            width: 2px;
+          }
+
+          span.close {
+
+            display: inline-block;
+          }
+        }
+      }
+    }
+
+    div.browser {
+
+      .cover;
+      background-color: white;
+
+      div.webview-content {
+
+        .cover;
+        position: relative;
+
+        webview {
+
+          .cover;
+        }
+
+        &.guest-loading {
+
+          div.webview-loading-indicator {
+
+            display: flex;
+          }
+        }
+
+        div.webview-loading-indicator {
+
+          display: none;
+          justify-content: center;
+          align-items: center;
+          .cover;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 1;
+          background-color: rgba(255, 255, 255, 0.5);
+          line-height: 100%;
+          text-align: center;
+          vertical-align: middle;
+          font-weight: bold;
+          font-size: 1.5em;
+        }
+      }
+    }
+  }
+}
